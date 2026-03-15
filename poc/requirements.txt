@@ -1,0 +1,8 @@
+# AIForce POC Dependencies
+# Install with: pip install -r requirements.txt
+
+# AWS SDK for direct Bedrock calls
+boto3>=1.28.0
+
+# HTTP client for AIForce API calls
+requests>=2.31.0

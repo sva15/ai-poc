@@ -1,0 +1,3404 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "AI Force: Prompt Engineering Service(PES)",
+        "description": "The AI Force: Prompt Engineering Service (PES) API provides endpoints \n    for managing prompts, including saving, updating, deleting, listing, \n    and retrieving prompt details. It supports functionalities such as prompt generation, \n    testing, evaluation, and execution. The API is designed to handle advanced configurations, \n    project-specific prompts, and metadata, ensuring efficient prompt management and \n    integration with Large Language Models (LLMs). \n    Authentication is enforced using HTTP Bearer tokens, and health check endpoints \n    are included for monitoring service availability.",
+        "version": "2.0.1"
+    },
+    "paths": {
+        "/pes/prompt_studio/save_prompt": {
+            "post": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Save Prompt",
+                "description": "Create a new prompt in the database.\n\n    Endpoint:\n        POST /prompt_studio/save_prompt\n\n    Args:\n        request (Request): FastAPI request object.\n        name (str): Name of the prompt (required).\n        description (str, optional): Description of the prompt.\n        system_prompt (str, optional): System prompt text.\n        user_prompt (str): User prompt text (required).\n        examples (str, optional): JSON string of example items.\n        lm_config_id (int): Language model config ID (required).\n        lm_params (str, optional): JSON string of advanced LM parameters.\n        mcp_enabled (bool, optional): Flag to enable MCP.\n        is_public (bool, optional): Flag for public/private collection.\n        publish_status (bool): Publish status (required).\n        version (str, optional): Prompt version.\n        parent_prompt_id (int, optional): Parent prompt ID.\n        evaluation (str, optional): JSON string of evaluation details.\n        varriables (str, optional): JSON string of variables.\n        service (PromptStudioService): Dependency-injected service instance.\n\n    Returns:\n        BaseResponse: JSON response indicating success and containing the saved prompt data.",
+                "operationId": "save_prompt_pes_prompt_studio_save_prompt_post",
+                "requestBody": {
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_save_prompt_pes_prompt_studio_save_prompt_post"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_PromptDetailsSaveResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/pes/prompt_studio/update_prompt/{prompt_id}": {
+            "put": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Update Prompt",
+                "description": "Update an existing prompt in the database.\n\n    Args:\n        prompt_id (int): The unique identifier of the prompt to be updated.\n        request (PromptDetailsUpdateRequest):\n            The request body containing the updated details of the prompt.\n        service (PromptStudioService):\n            The service instance used to handle the prompt updating logic.\n\n    Returns:\n        BaseResponse: A JSON response indicating the success of the operation,\n                        along with the updated prompt data.",
+                "operationId": "update_prompt_pes_prompt_studio_update_prompt__prompt_id__put",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "prompt_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Prompt Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_update_prompt_pes_prompt_studio_update_prompt__prompt_id__put"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_PromptDetailsUpdateResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/pes/prompt_studio/delete_prompt": {
+            "delete": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Delete Prompt",
+                "description": "Delete an existing prompt from the database.\n\n    Args:\n        request (PromptDetailsDeleteRequest):\n            The request body containing the details of the prompt to be deleted.\n        service (PromptStudioService):\n            The service instance used to handle the prompt deletion logic.\n\n    Returns:\n        BaseResponse: A JSON response indicating the success of the operation,\n                        along with the details of the deleted prompt.",
+                "operationId": "delete_prompt_pes_prompt_studio_delete_prompt_delete",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PromptDetailsDeleteRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_PromptDetailsDeleteResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/pes/prompt_studio/list_prompt": {
+            "get": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "List Prompt",
+                "description": "Handle list prompt request.\n\n    Args:\n        request (dict): The request body containing project id  details.\n    Returns:\n        BaseResponse: JSON response with the prompt result",
+                "operationId": "list_prompt_pes_prompt_studio_list_prompt_get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 2147483647,
+                            "minimum": 1,
+                            "description": "Page number for pagination",
+                            "default": 1,
+                            "title": "Page"
+                        },
+                        "description": "Page number for pagination"
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 0,
+                            "description": "Number of items per page, if zero then all records will be fetched",
+                            "default": 10,
+                            "title": "Page Size"
+                        },
+                        "description": "Number of items per page, if zero then all records will be fetched"
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 255,
+                                    "pattern": "^[a-zA-Z0-9 _-]*$"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Search term for prompt",
+                            "title": "Search"
+                        },
+                        "description": "Search term for prompt"
+                    },
+                    {
+                        "name": "is_public",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by collection Type [public,private]",
+                            "title": "Is Public"
+                        },
+                        "description": "Filter by collection Type [public,private]"
+                    },
+                    {
+                        "name": "publish_status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by prompt status [published,draft]",
+                            "title": "Publish Status"
+                        },
+                        "description": "Filter by prompt status [published,draft]"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PromptListResponse_PromptDetailsListResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/pes/prompt_studio/get_prompt_details/{prompt_id}": {
+            "get": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Get Prompt Details",
+                "description": "Handle get prompt request.\n    Args:\n        request (dict): The request body containing project id  details.\n    Returns:\n        BaseResponse: JSON response with the prompt result.",
+                "operationId": "get_prompt_details_pes_prompt_studio_get_prompt_details__prompt_id__get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "prompt_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Prompt Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_list_Prompts__"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/pes/prompt_studio/generate_prompt": {
+            "post": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Generate Prompt",
+                "description": "Generate a new prompt based on the provided details.\n\n    Args:\n        request (PromptDetailsSaveRequest):\n            The request body containing the details for the new prompt.\n        service (PromptStudioService):\n            The service instance used to handle the prompt generation logic.\n\n    Returns:\n        BaseResponse: A JSON response indicating the success of the operation,\n                        along with the generated prompt details.",
+                "operationId": "generate_prompt_pes_prompt_studio_generate_prompt_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PromptGenerateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_PromptTestResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/pes/prompt_studio/test_prompt": {
+            "post": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Test Prompt",
+                "description": "Test a prompt using the provided details.\n\n    Endpoint:\n        POST /prompt_studio/test_prompt\n\n    Args:\n        request (Request): FastAPI request object.\n        system_prompt (str, optional): System prompt text.\n        user_prompt (str): User prompt text (required).\n        examples (str, optional): JSON string of example items.\n        lm_config_id (int): Language model config ID (required).\n        lm_params (str, optional): JSON string of advanced LM parameters.\n        mcp_enabled (bool, optional): Flag to enable MCP.\n        varriables (str, optional): JSON string of variables.\n        promptId (int): Prompt ID to test the prompt.\n        service (PromptStudioService): Dependency-injected service instance.\n\n    Returns:\n        BaseResponse: JSON response with the test prompt result.",
+                "operationId": "test_prompt_pes_prompt_studio_test_prompt_post",
+                "requestBody": {
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_test_prompt_pes_prompt_studio_test_prompt_post"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_PromptTestResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/pes/prompt_studio/execute_prompt": {
+            "post": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Execute Prompt",
+                "description": "Handle user login request.\n    Args:\n        request (dict): The request body containing user login details.\n    Returns:\n        BaseResponse: JSON response with the login result.",
+                "operationId": "execute_prompt_pes_prompt_studio_execute_prompt_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ExecutePromptRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_PromptExecutionResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/pes/prompt_studio/metrics": {
+            "get": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Get Metrics",
+                "description": "Fetch available metrics from the GRC config API, filtered by applicability,\nstate, custom, and LLM-based flag.\nRequires a valid Bearer token in the Authorization header.",
+                "operationId": "get_metrics_pes_prompt_studio_metrics_get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "applicability",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by applicability",
+                            "default": "prompt",
+                            "title": "Applicability"
+                        },
+                        "description": "Filter by applicability"
+                    },
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by metric state",
+                            "title": "State"
+                        },
+                        "description": "Filter by metric state"
+                    },
+                    {
+                        "name": "custom",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by custom metric",
+                            "title": "Custom"
+                        },
+                        "description": "Filter by custom metric"
+                    },
+                    {
+                        "name": "llm-based",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by LLM-based metric",
+                            "default": false,
+                            "title": "Llm-Based"
+                        },
+                        "description": "Filter by LLM-based metric"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_MetricsResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/pes/prompt_studio/datasets": {
+            "get": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Get Datasets",
+                "description": "Retrieves a list of all datasets for the prompt studio only.\nuse_case_type is always enforced as 'prompt' for this endpoint, regardless of incoming value.\nReturns dataset id, name, description, and created timestamp.",
+                "operationId": "get_datasets_pes_prompt_studio_datasets_get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "applicability",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter datasets by applicability (e.g., 'llm', 'non_llm').",
+                            "title": "Applicability"
+                        },
+                        "description": "Filter datasets by applicability (e.g., 'llm', 'non_llm')."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_DataSetResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/pes/prompt_studio/datasets/upload": {
+            "post": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Upload Dataset",
+                "operationId": "upload_dataset_pes_prompt_studio_datasets_upload_post",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_upload_dataset_pes_prompt_studio_datasets_upload_post"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DatasetUploadResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/pes/prompt_studio/evaluate_prompt_dataset": {
+            "post": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Evaluate Prompt Dataset",
+                "operationId": "evaluate_prompt_dataset_pes_prompt_studio_evaluate_prompt_dataset_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PromptDatasetValidationRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_EvaluationPromptResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/pes/prompt_studio/trace/logs/{trace_id}": {
+            "get": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Trace Logs",
+                "description": "Fetch trace logs for a given trace ID.\n- **trace_id**: The trace ID to fetch logs for.\nReturns the trace logs or a not found error.",
+                "operationId": "trace_logs_pes_prompt_studio_trace_logs__trace_id__get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "trace_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Trace ID",
+                            "title": "Trace Id"
+                        },
+                        "description": "Trace ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_dict_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/pes/prompt_studio/evaluation_status/{request_id}": {
+            "get": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Get Evaluation Status",
+                "operationId": "get_evaluation_status_pes_prompt_studio_evaluation_status__request_id__get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Request Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_EvaluationStatus_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/pes/prompt_studio/compliance/scan-compliance": {
+            "post": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Scan Compliance",
+                "operationId": "scan_compliance_pes_prompt_studio_compliance_scan_compliance_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ScanComplianceRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_ScanComplianceResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/pes/prompt_studio/compliance/compliance-status/{request_id}": {
+            "get": {
+                "tags": [
+                    "prompt_studio"
+                ],
+                "summary": "Get Compliance Status",
+                "description": "Poll compliance scan status every 5 seconds until a final response is received.",
+                "operationId": "get_compliance_status_pes_prompt_studio_compliance_compliance_status__request_id__get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Request Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_ComplianceStatusResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/check_health": {
+            "get": {
+                "tags": [
+                    "healthcheck"
+                ],
+                "summary": "Perform a Health Check",
+                "description": "## Perform a Health Check\nReturns:\n    HealthCheck: Returns a JSON response with the health status",
+                "operationId": "get_health_check_health_get",
+                "responses": {
+                    "200": {
+                        "description": "Return HTTP Status Code 200 (OK)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HealthCheck"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/": {
+            "get": {
+                "summary": "Read Root",
+                "description": "Telemetry service",
+                "operationId": "read_root__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AdvanceParameters": {
+                "properties": {
+                    "temperature": {
+                        "type": "number",
+                        "title": "Temperature",
+                        "description": "Temperature parameter for the LLM."
+                    },
+                    "max_token": {
+                        "type": "integer",
+                        "maximum": 2147483647.0,
+                        "exclusiveMinimum": 0.0,
+                        "title": "Max Token",
+                        "description": "Maximum number of tokens allowed."
+                    },
+                    "format": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "json",
+                                    "text"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Format",
+                        "description": "Expected response format. Can be 'json' or 'text'.",
+                        "default": "json"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "temperature",
+                    "max_token"
+                ],
+                "title": "AdvanceParameters",
+                "description": "Schema for advanced LLM parameters used during testing.\nIncludes settings like temperature, token limits, and response format."
+            },
+            "AggregatedComplianceRecommendation": {
+                "properties": {
+                    "system": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "System"
+                    },
+                    "user": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User"
+                    }
+                },
+                "type": "object",
+                "title": "AggregatedComplianceRecommendation"
+            },
+            "BaseResponse_ComplianceStatusResponse_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ComplianceStatusResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[ComplianceStatusResponse]"
+            },
+            "BaseResponse_DataSetResponse_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DataSetResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[DataSetResponse]"
+            },
+            "BaseResponse_EvaluationPromptResponse_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/EvaluationPromptResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[EvaluationPromptResponse]"
+            },
+            "BaseResponse_EvaluationStatus_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/EvaluationStatus"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[EvaluationStatus]"
+            },
+            "BaseResponse_MetricsResponse_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MetricsResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[MetricsResponse]"
+            },
+            "BaseResponse_PromptDetailsDeleteResponse_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PromptDetailsDeleteResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[PromptDetailsDeleteResponse]"
+            },
+            "BaseResponse_PromptDetailsSaveResponse_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PromptDetailsSaveResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[PromptDetailsSaveResponse]"
+            },
+            "BaseResponse_PromptDetailsUpdateResponse_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PromptDetailsUpdateResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[PromptDetailsUpdateResponse]"
+            },
+            "BaseResponse_PromptExecutionResponse_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PromptExecutionResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[PromptExecutionResponse]"
+            },
+            "BaseResponse_PromptTestResponse_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PromptTestResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[PromptTestResponse]"
+            },
+            "BaseResponse_ScanComplianceResponse_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ScanComplianceResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[ScanComplianceResponse]"
+            },
+            "BaseResponse_dict_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Data"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[dict]"
+            },
+            "BaseResponse_list_Prompts__": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/Prompts"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Data"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[list[Prompts]]"
+            },
+            "Body_save_prompt_pes_prompt_studio_save_prompt_post": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "system_prompt": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "System Prompt"
+                    },
+                    "user_prompt": {
+                        "type": "string",
+                        "title": "User Prompt"
+                    },
+                    "examples": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Examples",
+                        "description": "JSON string of ExampleItem list, e.g. [{\"input\":\"\", \"output\":\"\"}]"
+                    },
+                    "lm_config_id": {
+                        "type": "integer",
+                        "title": "Lm Config Id"
+                    },
+                    "lm_params": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Lm Params",
+                        "description": "JSON string of advanced parameters, e.g. {\"temperature\":0.7,\"max_token\":2000}"
+                    },
+                    "mcp_enabled": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Mcp Enabled",
+                        "default": false
+                    },
+                    "is_public": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Public",
+                        "default": false
+                    },
+                    "publish_status": {
+                        "type": "boolean",
+                        "title": "Publish Status"
+                    },
+                    "version": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Version",
+                        "default": "1.0"
+                    },
+                    "parent_prompt_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent Prompt Id",
+                        "default": 0
+                    },
+                    "trace_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Trace Id",
+                        "description": "Trace: to record for llm call e.g {\"status\": \"\",\"trace_id\":\"\"}"
+                    },
+                    "evaluation": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Evaluation",
+                        "description": "JSON string of evaluation details, e.g. {\"choosed_evaluators\": {\"PII Evaluator (Input)\": false, \"Prompt Injection Evaluator\": false, \"Secrets Evaluator (Input)\": true, \"Toxicity Evaluator (Input)\": false, \"Prompt Clarity Evaluator\": false}, \"selected_test_data\": {\"Secrets Evaluator (Input)\": \"DataTest\"}, \"evaluation_metrics\": [{\"metric\": \"Secrets Evaluator (Input)\", \"score\": 1.0, \"is_pass\": true, \"threshold\": 0.5}]}"
+                    },
+                    "varriables": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Varriables",
+                        "description": "JSON string of variables, e.g. [{\"name\":\"var1\",\"isFileInput\":false,\"isRequired\":true,\"filename\":\"file1.txt\",\"value\":\"value1\"}]"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "user_prompt",
+                    "lm_config_id",
+                    "publish_status"
+                ],
+                "title": "Body_save_prompt_pes_prompt_studio_save_prompt_post"
+            },
+            "Body_test_prompt_pes_prompt_studio_test_prompt_post": {
+                "properties": {
+                    "system_prompt": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "System Prompt"
+                    },
+                    "user_prompt": {
+                        "type": "string",
+                        "title": "User Prompt"
+                    },
+                    "examples": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Examples",
+                        "description": "JSON string of ExampleItem list, e.g. [{\"input\":\"\",\"output\":\"\"}]"
+                    },
+                    "lm_config_id": {
+                        "type": "integer",
+                        "title": "Lm Config Id"
+                    },
+                    "lm_params": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Lm Params",
+                        "description": "JSON string of advanced parameters, e.g. {\"temperature\":0.7,\"max_token\":2000}"
+                    },
+                    "mcp_enabled": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Mcp Enabled",
+                        "default": false
+                    },
+                    "varriables": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Varriables",
+                        "description": "JSON string of variables, e.g. [{\"name\":\"var1\",\"isFileInput\":false,\"isRequired\":true,\"filename\":\"file1.txt\",\"value\":\"value1\"}]"
+                    },
+                    "promptId": {
+                        "type": "integer",
+                        "title": "Promptid"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "user_prompt",
+                    "lm_config_id",
+                    "promptId"
+                ],
+                "title": "Body_test_prompt_pes_prompt_studio_test_prompt_post"
+            },
+            "Body_update_prompt_pes_prompt_studio_update_prompt__prompt_id__put": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "system_prompt": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "System Prompt"
+                    },
+                    "user_prompt": {
+                        "type": "string",
+                        "title": "User Prompt"
+                    },
+                    "examples": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Examples",
+                        "description": "JSON string of ExampleItem list, e.g. [{\"input\":\"\",\"output\":\"\"}]"
+                    },
+                    "lm_config_id": {
+                        "type": "integer",
+                        "title": "Lm Config Id"
+                    },
+                    "lm_params": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Lm Params",
+                        "description": "JSON string of advanced parameters, e.g. {\"temperature\":0.7,\"max_token\":2000}"
+                    },
+                    "mcp_enabled": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Mcp Enabled",
+                        "default": false
+                    },
+                    "is_public": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Public",
+                        "default": false
+                    },
+                    "publish_status": {
+                        "type": "boolean",
+                        "title": "Publish Status"
+                    },
+                    "version": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Version",
+                        "default": "1.0"
+                    },
+                    "parent_prompt_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent Prompt Id",
+                        "default": 0
+                    },
+                    "varriables": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Varriables",
+                        "description": "JSON string of variables, e.g. [{\"name\":\"var1\",\"isFileInput\":false,\"isRequired\":true,\"filename\":\"file1.txt\",\"value\":\"value1\"}]"
+                    },
+                    "evaluation": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Evaluation",
+                        "description": "JSON string of evaluation details, e.g. {\"choosed_evaluators\": {\"PII Evaluator (Input)\": false, \"Prompt Injection Evaluator\": false, \"Secrets Evaluator (Input)\": true, \"Toxicity Evaluator (Input)\": false, \"Prompt Clarity Evaluator\": false}, \"selected_test_data\": {\"Secrets Evaluator (Input)\": \"DataTest\"}, \"evaluation_metrics\": [{\"metric\": \"Secrets Evaluator (Input)\", \"score\": 1.0, \"is_pass\": true, \"threshold\": 0.5}]}"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "user_prompt",
+                    "lm_config_id",
+                    "publish_status"
+                ],
+                "title": "Body_update_prompt_pes_prompt_studio_update_prompt__prompt_id__put"
+            },
+            "Body_upload_dataset_pes_prompt_studio_datasets_upload_post": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "Dataset name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description",
+                        "description": "Dataset description"
+                    },
+                    "applicability": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Applicability",
+                        "description": "Applicability (e.g., 'llm', 'non_llm', 'llm, non_llm')"
+                    },
+                    "use_case_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Use Case Type",
+                        "description": "Use case type is prompt here"
+                    },
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "title": "File",
+                        "description": "CSV file to upload"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "description",
+                    "file"
+                ],
+                "title": "Body_upload_dataset_pes_prompt_studio_datasets_upload_post"
+            },
+            "ComplianceStatusResponse": {
+                "properties": {
+                    "request_id": {
+                        "type": "string",
+                        "title": "Request Id"
+                    },
+                    "results": {
+                        "items": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        },
+                        "type": "array",
+                        "title": "Results"
+                    },
+                    "aggregated_compliance_recommendation": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AggregatedComplianceRecommendation"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "request_id",
+                    "results"
+                ],
+                "title": "ComplianceStatusResponse"
+            },
+            "DataSetResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "datasets": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/Dataset"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Datasets"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "DataSetResponse"
+            },
+            "Dataset": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "applicability": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Applicability"
+                    },
+                    "use_case_type": {
+                        "type": "string",
+                        "title": "Use Case Type"
+                    },
+                    "no_of_items": {
+                        "type": "integer",
+                        "title": "No Of Items"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "title": "Updated At"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "name",
+                    "applicability",
+                    "use_case_type",
+                    "no_of_items",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "Dataset"
+            },
+            "DatasetItem": {
+                "properties": {
+                    "actual_output": {
+                        "type": "string",
+                        "title": "Actual Output"
+                    },
+                    "sanitized_prompt": {
+                        "type": "string",
+                        "title": "Sanitized Prompt"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "actual_output",
+                    "sanitized_prompt"
+                ],
+                "title": "DatasetItem"
+            },
+            "DatasetUploadResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "DatasetUploadResponse"
+            },
+            "EvaluationMetric": {
+                "properties": {
+                    "metric": {
+                        "type": "string",
+                        "title": "Metric"
+                    },
+                    "avg_score": {
+                        "type": "number",
+                        "title": "Avg Score"
+                    },
+                    "threshold": {
+                        "type": "number",
+                        "title": "Threshold"
+                    },
+                    "is_pass": {
+                        "type": "boolean",
+                        "title": "Is Pass"
+                    },
+                    "pass_count": {
+                        "type": "integer",
+                        "title": "Pass Count"
+                    },
+                    "fail_count": {
+                        "type": "integer",
+                        "title": "Fail Count"
+                    },
+                    "total_count": {
+                        "type": "integer",
+                        "title": "Total Count"
+                    },
+                    "pass_rate": {
+                        "type": "number",
+                        "title": "Pass Rate"
+                    },
+                    "error_message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Error Message"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "metric",
+                    "avg_score",
+                    "threshold",
+                    "is_pass",
+                    "pass_count",
+                    "fail_count",
+                    "total_count",
+                    "pass_rate"
+                ],
+                "title": "EvaluationMetric"
+            },
+            "EvaluationPromptResponse": {
+                "properties": {
+                    "status": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Status"
+                    },
+                    "request_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Request Id"
+                    }
+                },
+                "type": "object",
+                "title": "EvaluationPromptResponse"
+            },
+            "EvaluationStatus": {
+                "properties": {
+                    "eval_status": {
+                        "type": "string",
+                        "title": "Eval Status"
+                    },
+                    "eval_data": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/EvaluationMetric"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Eval Data"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "eval_status"
+                ],
+                "title": "EvaluationStatus"
+            },
+            "ExampleItem": {
+                "properties": {
+                    "input": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 4000
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Input",
+                        "description": "Example input for the prompt."
+                    },
+                    "output": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 4000
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Output",
+                        "description": "Example output for the prompt."
+                    }
+                },
+                "type": "object",
+                "title": "ExampleItem",
+                "description": "Schema for example items.\nRepresents input-output examples for prompts."
+            },
+            "ExecutePromptRequest": {
+                "properties": {
+                    "prompt_id": {
+                        "type": "integer",
+                        "maximum": 2147483647.0,
+                        "minimum": 1.0,
+                        "title": "Prompt Id",
+                        "description": "ID of the prompt to be executed."
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Data",
+                        "description": "Optional data to be used with the prompt. In case of additional prompt data, pass the value in `__global_var_prompt_data__` key.",
+                        "example": {
+                            "key": "value"
+                        }
+                    },
+                    "config_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "maximum": 2147483647.0,
+                                "minimum": 1.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Config Id",
+                        "description": "ID of the model configuration to be used."
+                    },
+                    "llm_guard_enabled": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Llm Guard Enabled",
+                        "description": "Flag to enable or disable LLM guard checks.",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prompt_id"
+                ],
+                "title": "ExecutePromptRequest",
+                "description": "Represents the request structure for executing a prompt.\n\nAttributes:\n    prompt (str): The prompt to be executed.\n    user (EmbeddingUserParams): User parameters associated with the request."
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "HealthCheck": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "const": "OK",
+                        "title": "Status",
+                        "default": "OK"
+                    }
+                },
+                "type": "object",
+                "title": "HealthCheck",
+                "description": "Response model to validate and return when performing a health check."
+            },
+            "MetricDataset": {
+                "properties": {
+                    "metric": {
+                        "type": "string",
+                        "title": "Metric",
+                        "example": "Toxicity Evaluator (Input)"
+                    },
+                    "dataset": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Dataset",
+                        "example": "prompt01"
+                    },
+                    "dataset_items": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/DatasetItem"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Dataset Items",
+                        "description": "If provided, use these items instead of dataset. Each item will be sanitized."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "metric"
+                ],
+                "title": "MetricDataset"
+            },
+            "MetricDetail": {
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    },
+                    "datasets": {
+                        "items": {},
+                        "type": "array",
+                        "title": "Datasets"
+                    },
+                    "reference_required": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Reference Required"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "description",
+                    "datasets"
+                ],
+                "title": "MetricDetail"
+            },
+            "MetricsResponse": {
+                "properties": {
+                    "metrics": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": {
+                                    "$ref": "#/components/schemas/MetricDetail"
+                                },
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Metrics"
+                    }
+                },
+                "type": "object",
+                "title": "MetricsResponse"
+            },
+            "PromptDatasetValidationRequest": {
+                "properties": {
+                    "prompt_name": {
+                        "type": "string",
+                        "title": "Prompt Name",
+                        "example": "prompt_123"
+                    },
+                    "input_prompt": {
+                        "type": "string",
+                        "title": "Input Prompt",
+                        "example": "Write a detailed story involving a person named {{Name}} who shares his SSN {SSN}."
+                    },
+                    "system_prompt": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "System Prompt",
+                        "example": "You are a helpful assistant that ensures all user inputs are anonymized before responding."
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description",
+                        "example": "Validating design-time prompt with datasets"
+                    },
+                    "metric_datasets": {
+                        "items": {
+                            "$ref": "#/components/schemas/MetricDataset"
+                        },
+                        "type": "array",
+                        "title": "Metric Datasets",
+                        "description": "List of metric-dataset pairs or metric-dataset_items objects.",
+                        "example": [
+                            {
+                                "dataset_items": [
+                                    {
+                                        "actual_output": "In the small misty village of Eldergrove nestled deep within the ancient Whispering Woods there lived a young girl named Elara Eldergrove was a place where magic lingered in the air and the trees seemed to hum with secrets of old The villagers were simple folk tending to their farms and living in harmony with the enchanted forest that surrounded them",
+                                        "sanitized_prompt": "Generate me a fictional story"
+                                    }
+                                ],
+                                "metric": "Toxicity Classification Score (Input)"
+                            },
+                            {
+                                "dataset": "prompt01",
+                                "metric": "Detect Hallucination"
+                            }
+                        ]
+                    },
+                    "evaluation_platform": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Evaluation Platform",
+                        "example": "g3s"
+                    },
+                    "execution_platform": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Execution Platform",
+                        "example": "g3s"
+                    },
+                    "evaluation_model": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Evaluation Model",
+                        "example": "1"
+                    },
+                    "execution_model": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Execution Model",
+                        "example": "1"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prompt_name",
+                    "input_prompt",
+                    "metric_datasets"
+                ],
+                "title": "PromptDatasetValidationRequest"
+            },
+            "PromptDetailsDeleteRequest": {
+                "properties": {
+                    "prompt_id": {
+                        "type": "integer",
+                        "maximum": 2147483647.0,
+                        "exclusiveMinimum": 0.0,
+                        "title": "Prompt Id",
+                        "description": "Unique identifier for the prompt to be deleted."
+                    },
+                    "evaluation_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "maximum": 2147483647.0,
+                                "exclusiveMinimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Evaluation Id",
+                        "description": "Evaluation ID associated with the prompt."
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "prompt_id"
+                ],
+                "title": "PromptDetailsDeleteRequest",
+                "description": "Schema for prompt details deletion request.\nUsed to delete a prompt based on its ID."
+            },
+            "PromptDetailsDeleteResponse": {
+                "properties": {
+                    "is_deleted": {
+                        "type": "boolean",
+                        "title": "Is Deleted",
+                        "description": "Indicates whether the prompt was successfully deleted."
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "is_deleted"
+                ],
+                "title": "PromptDetailsDeleteResponse",
+                "description": "Schema for prompt details deletion response.\nRepresents the response after deleting a prompt, indicating success."
+            },
+            "PromptDetailsListResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/PromptListItem"
+                        },
+                        "type": "array",
+                        "title": "Data"
+                    },
+                    "total_count": {
+                        "type": "integer",
+                        "title": "Total Count"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "data",
+                    "total_count"
+                ],
+                "title": "PromptDetailsListResponse",
+                "description": "Schema for prompt details list response.\nContains the list of prompt items and the total count."
+            },
+            "PromptDetailsSaveResponse": {
+                "properties": {
+                    "prompt": {
+                        "$ref": "#/components/schemas/PromptListItem"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "prompt"
+                ],
+                "title": "PromptDetailsSaveResponse",
+                "description": "Schema for prompt details save response.\nRepresents the response after saving a prompt, including its ID."
+            },
+            "PromptDetailsUpdateResponse": {
+                "properties": {
+                    "prompt_id": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0.0,
+                        "title": "Prompt Id",
+                        "description": "Unique identifier for the updated prompt."
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "prompt_id"
+                ],
+                "title": "PromptDetailsUpdateResponse",
+                "description": "Schema for prompt details update response.\nRepresents the response after updating a prompt, including its ID."
+            },
+            "PromptExecutionResponse": {
+                "properties": {
+                    "execution_result": {
+                        "type": "string",
+                        "title": "Execution Result"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "execution_result"
+                ],
+                "title": "PromptExecutionResponse",
+                "description": "Schema for prompt execution response.\nRepresents the response after executing a prompt."
+            },
+            "PromptGenerateRequest": {
+                "properties": {
+                    "prompt_query": {
+                        "type": "string",
+                        "minLength": 10,
+                        "title": "Prompt Query",
+                        "description": "User prompt: instruction for llm."
+                    },
+                    "framework": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "minLength": 3,
+                        "title": "Framework",
+                        "description": "Framework to use for prompt generation.\n\nSupported values:\n- `Free-Form` → Free-form prompting.\n- `ReAct` → Reason + Act (DSPy)\n- `COT` → Chain of Thought reasoning.\n- `MCOT` → Multi-chain comparison.\n- `Reflection` → Self-reflective refinement.\n- `RISEN` → Iterative self-enhancement.\n- `RTF` → Role-Task-Format prompting.\n- `Self-Consistency` → Averages multiple reasoning chains.",
+                        "example": "COT"
+                    },
+                    "lm_config_id": {
+                        "type": "integer",
+                        "maximum": 2147483647.0,
+                        "exclusiveMinimum": 0.0,
+                        "title": "Lm Config Id"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "prompt_query",
+                    "framework",
+                    "lm_config_id"
+                ],
+                "title": "PromptGenerateRequest",
+                "description": "Schema for generating a prompt.\nUsed to generate a prompt based on user input and configuration."
+            },
+            "PromptListItem": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "maximum": 2147483647.0,
+                        "exclusiveMinimum": 0.0,
+                        "title": "Id",
+                        "description": "Unique identifier for the prompt."
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "Name of the prompt."
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description",
+                        "description": "Description of the prompt."
+                    },
+                    "project_id": {
+                        "type": "integer",
+                        "maximum": 2147483647.0,
+                        "exclusiveMinimum": 0.0,
+                        "title": "Project Id",
+                        "description": "Project identifier associated with the prompt."
+                    },
+                    "examples": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/ExampleItem"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Examples",
+                        "description": "Examples associated with the prompt."
+                    },
+                    "lm_params": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AdvanceParameters"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Language model parameters for the prompt."
+                    },
+                    "mcp_enabled": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Mcp Enabled",
+                        "description": "Indicates if MCP is enabled."
+                    },
+                    "is_public": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Public",
+                        "description": "Indicates if the prompt is public."
+                    },
+                    "publish_status": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Publish Status",
+                        "description": "Publication status of the prompt."
+                    },
+                    "lm_config_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "maximum": 2147483647.0,
+                                "exclusiveMinimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Lm Config Id",
+                        "description": "LLM configuration ID."
+                    },
+                    "varriables": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/VariableItems"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Varriables",
+                        "description": "Variables associated with the prompt."
+                    },
+                    "evaluation": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Evaluation",
+                        "description": "Evaluation details for the prompt."
+                    },
+                    "user_prompt": {
+                        "type": "string",
+                        "title": "User Prompt",
+                        "description": "User prompt content."
+                    },
+                    "system_prompt": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "System Prompt",
+                        "description": "System prompt content."
+                    },
+                    "trace_id": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Trace Id",
+                        "description": "Trace ID for the prompt."
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "id",
+                    "name",
+                    "project_id",
+                    "lm_config_id",
+                    "user_prompt"
+                ],
+                "title": "PromptListItem",
+                "description": "Schema for a prompt list item.\nRepresents a summary of a prompt with its name, description, and metadata."
+            },
+            "PromptListResponse_PromptDetailsListResponse_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "title": "Status",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "example": "Prompt list fetched successfully"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PromptDetailsListResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status",
+                    "message"
+                ],
+                "title": "PromptListResponse[PromptDetailsListResponse]"
+            },
+            "PromptTestResponse": {
+                "properties": {
+                    "response": {
+                        "items": {},
+                        "type": "array",
+                        "title": "Response",
+                        "description": "List of responses generated during prompt testing."
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "response"
+                ],
+                "title": "PromptTestResponse",
+                "description": "Schema for prompt testing response.\nRepresents the response after testing a prompt."
+            },
+            "Prompts": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "is_active": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Active",
+                        "default": true
+                    },
+                    "created_by": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Created By"
+                    },
+                    "created_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Created At"
+                    },
+                    "modified_by": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Modified By"
+                    },
+                    "modified_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Modified At"
+                    },
+                    "project_id": {
+                        "type": "integer",
+                        "title": "Project Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "user_prompt": {
+                        "type": "string",
+                        "title": "User Prompt"
+                    },
+                    "system_prompt": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "System Prompt"
+                    },
+                    "lm_config_id": {
+                        "type": "integer",
+                        "title": "Lm Config Id"
+                    },
+                    "parent_prompt_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent Prompt Id"
+                    },
+                    "publish_status": {
+                        "type": "boolean",
+                        "title": "Publish Status"
+                    },
+                    "lm_params": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Lm Params"
+                    },
+                    "mcp_enabled": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Mcp Enabled",
+                        "default": false
+                    },
+                    "is_public": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Public",
+                        "default": false
+                    },
+                    "examples": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    },
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Examples"
+                    },
+                    "varriables": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Varriables"
+                    },
+                    "version": {
+                        "type": "string",
+                        "title": "Version"
+                    },
+                    "trace_id": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Trace Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "project_id",
+                    "name",
+                    "user_prompt",
+                    "lm_config_id",
+                    "publish_status",
+                    "version"
+                ],
+                "title": "Prompts",
+                "description": "Model representing a prompt in the system."
+            },
+            "ScanComplianceRequest": {
+                "properties": {
+                    "prompt_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Prompt Name"
+                    },
+                    "system_prompt": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "System Prompt"
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "title": "Prompt"
+                    },
+                    "documents": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Documents",
+                        "default": []
+                    },
+                    "evaluation_platform": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Evaluation Platform"
+                    },
+                    "evaluation_model": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Evaluation Model"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prompt"
+                ],
+                "title": "ScanComplianceRequest"
+            },
+            "ScanComplianceResponse": {
+                "properties": {
+                    "request_id": {
+                        "type": "string",
+                        "title": "Request Id"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "request_id"
+                ],
+                "title": "ScanComplianceResponse"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            },
+            "VariableItems": {
+                "properties": {
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name",
+                        "description": "Name of the variable."
+                    },
+                    "isFileInput": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Isfileinput",
+                        "description": "Indicates if the variable is a file input.",
+                        "default": false
+                    },
+                    "isRequired": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Isrequired",
+                        "description": "Indicates if the variable is required.",
+                        "default": false
+                    },
+                    "value": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Value",
+                        "description": "Value of the variable."
+                    },
+                    "fileName": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Filename",
+                        "description": "File name associated with the variable."
+                    }
+                },
+                "type": "object",
+                "title": "VariableItems",
+                "description": "Schema for variable items.\nRepresents individual variables with their name, value, and requirement status."
+            }
+        },
+        "securitySchemes": {
+            "HTTPBearer": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    }
+}

@@ -1,0 +1,2180 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "AIForce Security Guardrails Service",
+        "description": "Ensure safe,compliant and policy-aligned LLM prompts and responses.",
+        "version": "0.0.1"
+    },
+    "servers": [
+        {
+            "url": "/sgs"
+        }
+    ],
+    "paths": {
+        "/register/token-context": {
+            "get": {
+                "tags": [
+                    "Debug"
+                ],
+                "summary": "Access Protected Resource (Example)",
+                "description": "An example protected API endpoint that requires a valid access token.\nThis demonstrates how a token generated via `/gettoken` can be used to authenticate requests.",
+                "operationId": "protected_resource_register_token_context_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/security-groups/config-control": {
+            "get": {
+                "tags": [
+                    "Security Groups"
+                ],
+                "summary": "Read master security group control options",
+                "description": "Updates the master security group with new global control options.",
+                "operationId": "get_master_security_group_control_api_security_groups_config_control_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MasterSecurityGroupControlResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Security Groups"
+                ],
+                "summary": "Configure master security group control options and scanner configuration",
+                "description": "Updates the master security group with new global control options and/or scanner configurations.",
+                "operationId": "set_master_security_group_control_api_security_groups_config_control_put",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MasterSecurityGroupControlRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/security-groups/register": {
+            "post": {
+                "tags": [
+                    "Security Groups"
+                ],
+                "summary": "Register a new Security Group",
+                "description": "Register the new security group",
+                "operationId": "register_security_group_api_security_groups_register_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SecurityGroupRegisterRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SecurityGroupRegisterResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/security-groups/list": {
+            "get": {
+                "tags": [
+                    "Security Groups"
+                ],
+                "summary": "Get all registered Security Groups",
+                "description": "Endpoint for listing all available security groups",
+                "operationId": "get_all_security_groups_api_security_groups_list_get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/SecurityGroupState"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter groups by their current lifecycle state (e.g., active, inactive).",
+                            "title": "State"
+                        },
+                        "description": "Filter groups by their current lifecycle state (e.g., active, inactive)."
+                    },
+                    {
+                        "name": "include_master",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "If true, includes the system-level master security groups in the response.",
+                            "title": "Include Master"
+                        },
+                        "description": "If true, includes the system-level master security groups in the response."
+                    },
+                    {
+                        "name": "state_only",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Whether to return only the state metadata instead of full group details.",
+                            "default": true,
+                            "title": "State Only"
+                        },
+                        "description": "Whether to return only the state metadata instead of full group details."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SecurityGroupListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/security-groups/{group_name}/config": {
+            "put": {
+                "tags": [
+                    "Security Groups"
+                ],
+                "summary": "Configure LLM-guard scanners for a Security Group",
+                "description": "Endpoint for configuring the security group",
+                "operationId": "configure_security_group_scanners_api_security_groups__group_name__config_put",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "group_name",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Name of the security group to configure.",
+                            "title": "Group Name"
+                        },
+                        "description": "Name of the security group to configure."
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SecurityGroupConfigRequest",
+                                "default": {}
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UpdateConfigResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Security Groups"
+                ],
+                "summary": "Get LLM-guard scanner configuration for a Security Group",
+                "description": "Endpoint for getting the security group config",
+                "operationId": "get_security_group_config_api_security_groups__group_name__config_get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "group_name",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Name of the security group to retrieve configuration for.",
+                            "title": "Group Name"
+                        },
+                        "description": "Name of the security group to retrieve configuration for."
+                    },
+                    {
+                        "name": "view",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/SecurityGroupView",
+                            "description": "To retrieve the raw or effective config",
+                            "default": "effective"
+                        },
+                        "description": "To retrieve the raw or effective config"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SecurityGroupScannerConfigGetResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/security-groups/{group_name}": {
+            "delete": {
+                "tags": [
+                    "Security Groups"
+                ],
+                "summary": "Delete a Security Group",
+                "description": "Endpoint for deleting the security group",
+                "operationId": "delete_security_group_api_security_groups__group_name__delete",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "group_name",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Name of the security group to delete.",
+                            "title": "Group Name"
+                        },
+                        "description": "Name of the security group to delete."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeleteSecurityGroupResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/security-groups/master/scanners": {
+            "get": {
+                "tags": [
+                    "Security Groups"
+                ],
+                "summary": "Get master scanner configuration",
+                "description": "get_master_scanners_api",
+                "operationId": "get_master_scanners_api_security_groups_master_scanners_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SecurityGroupScannerConfigGetResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Security Groups"
+                ],
+                "summary": "Update master scanner configuration",
+                "description": "update_master_scanners",
+                "operationId": "update_master_scanners_api_security_groups_master_scanners_put",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SecurityGroupConfigRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/scan/prompt": {
+            "post": {
+                "tags": [
+                    "Scan"
+                ],
+                "summary": "Validate prompt execution (templated prompt with data)",
+                "description": "Analyzes a prompt ,ready for LLM execution using configured input scanners.",
+                "operationId": "prompt_execution_validation_endpoint_scan_prompt_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PromptExecutionValidationRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GuardrailOutputExecution"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/scan/output": {
+            "post": {
+                "tags": [
+                    "Scan"
+                ],
+                "summary": "Validate LLM output",
+                "description": "Analyzes the output generated by an LLM using configured output scanners.",
+                "operationId": "llm_output_validation_endpoint_scan_output_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LLMOutputValidationRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationOutputResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/": {
+            "get": {
+                "summary": "Read Root",
+                "description": "Return the message when App is running",
+                "operationId": "read_root__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/check_health": {
+            "get": {
+                "tags": [
+                    "healthcheck"
+                ],
+                "summary": "Perform a Health Check",
+                "description": "## Perform a Health Check\nReturns:\n    HealthCheck: Returns a JSON response with the health status",
+                "operationId": "get_health_check_health_get",
+                "responses": {
+                    "200": {
+                        "description": "Return HTTP Status Code 200 (OK)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HealthCheck"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "DeleteSecurityGroupResponse": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "examples": [
+                            "Security group 'production-gateway-shield' deleted successfully."
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "message"
+                ],
+                "title": "DeleteSecurityGroupResponse",
+                "description": "Message response schema"
+            },
+            "GuardrailOutputExecution": {
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "title": "Prompt",
+                        "description": "The original prompt template provided by the user."
+                    },
+                    "variable": {
+                        "additionalProperties": true,
+                        "type": "object",
+                        "title": "Variable",
+                        "description": "A list of dictionaries, where each dictionary represents a variable used in the prompt template (e.g., {'NAME': 'John'})."
+                    },
+                    "is_safe": {
+                        "type": "boolean",
+                        "title": "Is Safe",
+                        "description": "Overall assessment of whether the data entry (or generated output, if applicable) is considered safe."
+                    },
+                    "results": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/MetricResponseOutput"
+                        },
+                        "type": "object",
+                        "title": "Results",
+                        "description": "Detailed breakdown of detected safety issues."
+                    },
+                    "sanitized_text": {
+                        "type": "string",
+                        "title": "Sanitized Text",
+                        "description": "sanitized prompt after running selected scanners"
+                    },
+                    "is_redacted": {
+                        "type": "boolean",
+                        "title": "Is Redacted",
+                        "description": "True if text is redacted by scanner"
+                    },
+                    "sanitized_text_safe": {
+                        "type": "boolean",
+                        "title": "Sanitized Text Safe",
+                        "description": "True if sanitized text is safe"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "prompt",
+                    "variable",
+                    "is_safe",
+                    "results",
+                    "sanitized_text",
+                    "is_redacted",
+                    "sanitized_text_safe"
+                ],
+                "title": "GuardrailOutputExecution",
+                "description": "The top-level model representing the complete guardrail evaluation output for a given prompt.",
+                "example": {
+                    "is_safe": false,
+                    "prompt": "Write a detailed story involving a person named {{NAME}} who shares his social security number {{SSN}}, address, and medical history on a public blog.",
+                    "results": {
+                        "Detect Code Language": {
+                            "is_error": false,
+                            "is_pass": false,
+                            "score": 0,
+                            "threshold": 0.5
+                        },
+                        "Detect PII": {
+                            "is_error": false,
+                            "is_pass": false,
+                            "score": 0.15,
+                            "threshold": 0.5
+                        }
+                    },
+                    "sanitized_text": "Write a detailed story involving a person named [REDACTED_PERSON_1] Doe who shares his social security number [REDACTED_US_SSN_1], address, and medical history on a public blog.",
+                    "variable": [
+                        {
+                            "NAME": "Jane Doe"
+                        },
+                        {
+                            "SSN": "999-88-7777"
+                        }
+                    ]
+                }
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "HealthCheck": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "const": "OK",
+                        "title": "Status",
+                        "default": "OK"
+                    }
+                },
+                "type": "object",
+                "title": "HealthCheck",
+                "description": "Response model to validate and return when performing a health check."
+            },
+            "LLMOutputValidationRequest": {
+                "properties": {
+                    "prompt_name": {
+                        "type": "string",
+                        "title": "Prompt Name",
+                        "description": "Unique identifier for the prompt.",
+                        "examples": [
+                            "prompt_123"
+                        ]
+                    },
+                    "output": {
+                        "type": "string",
+                        "title": "Output",
+                        "description": "The output generated by the LLM.",
+                        "examples": [
+                            "John Doe, a 42-year-old software engineer living at 123 Main Street, Springfield, IL, decided to document his life experiences online. In his blog post, he wrote: My social security number is 123-45-6789, and I was recently diagnosed with Type 2 diabetes. I hope my experience helps others dealing with similar issues"
+                        ]
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "title": "Prompt",
+                        "description": "This is the input prompt we provided to the LLM.",
+                        "examples": [
+                            "Write a detailed story involving a person named John Doe who shares his social security number 111-22-3333, address, and medical history on a public blog"
+                        ]
+                    },
+                    "security_group": {
+                        "type": "string",
+                        "title": "Security Group",
+                        "description": "Name of the security group to use for scanner configuration. If provided, overrides org_id/project_id config.",
+                        "examples": [
+                            "security_group_0"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prompt_name",
+                    "output",
+                    "prompt",
+                    "security_group"
+                ],
+                "title": "LLMOutputValidationRequest",
+                "description": "Request schema for validating LLM-generated output for safety issues.\n\nThe output is evaluated against configured guardrails such as PII,\ntoxicity, bias, hallucination, or policy violations."
+            },
+            "MasterControlConfig": {
+                "properties": {
+                    "disable_all_scanners": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Disable All Scanners",
+                        "description": "Enable or disable all scanners when creating master security group.",
+                        "default": false
+                    },
+                    "enforce_scanner_state": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Enforce Scanner State",
+                        "description": "Strict Mode: Syncs child scanner states with the Master's configuration.",
+                        "default": false
+                    },
+                    "force_override_child_config": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Force Override Child Config",
+                        "description": "Authority: If true, child-level config changes are ignored in favor of Master config.",
+                        "default": false
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "title": "MasterControlConfig",
+                "description": "Advanced flags for Master Security Group behavioral overrides."
+            },
+            "MasterSecurityGroupControlRequest": {
+                "properties": {
+                    "state": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SecurityGroupState"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Global state for the Master Security Group."
+                    },
+                    "control_config": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MasterControlConfig"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Policy enforcement settings for child security groups."
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "title": "MasterSecurityGroupControlRequest",
+                "description": "Root configuration for Master Security Group global policies.",
+                "examples": [
+                    {
+                        "control_config": {
+                            "disable_all_scanners": false,
+                            "enforce_scanner_state": true,
+                            "force_override_child_config": true
+                        },
+                        "state": "active"
+                    }
+                ]
+            },
+            "MasterSecurityGroupControlResponse": {
+                "properties": {
+                    "state": {
+                        "$ref": "#/components/schemas/SecurityGroupState",
+                        "description": "Current state for the Master Security Group.",
+                        "default": "active"
+                    },
+                    "control_config": {
+                        "$ref": "#/components/schemas/MasterControlConfig",
+                        "description": "JSON object containing the configurations control flags for the master group."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "control_config"
+                ],
+                "title": "MasterSecurityGroupControlResponse",
+                "description": "Root configuration for Master Security Group response."
+            },
+            "MessageResponse": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "example": "Operation successful."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "message"
+                ],
+                "title": "MessageResponse",
+                "description": "Generic message response model."
+            },
+            "MetricResponseOutput": {
+                "properties": {
+                    "score": {
+                        "type": "number",
+                        "title": "Score",
+                        "description": "Calculated score for the metric"
+                    },
+                    "threshold": {
+                        "type": "number",
+                        "title": "Threshold",
+                        "description": "Threshold required for the metric to pass"
+                    },
+                    "is_pass": {
+                        "type": "boolean",
+                        "title": "Is Pass",
+                        "description": "True if the score meets or exceeds the threshold"
+                    },
+                    "is_error": {
+                        "type": "boolean",
+                        "title": "Is Error",
+                        "description": "True if an error occurred during metric evaluation"
+                    },
+                    "redact_enabled": {
+                        "type": "boolean",
+                        "title": "Redact Enabled",
+                        "description": "True if text is redacted by scanner"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "score",
+                    "threshold",
+                    "is_pass",
+                    "is_error",
+                    "redact_enabled"
+                ],
+                "title": "MetricResponseOutput",
+                "description": "Represents the evaluation result for a metric without reasoning details."
+            },
+            "PromptExecutionValidationRequest": {
+                "properties": {
+                    "prompt_name": {
+                        "type": "string",
+                        "title": "Prompt Name",
+                        "description": "Unique identifier for the prompt.",
+                        "examples": [
+                            "prompt_123"
+                        ]
+                    },
+                    "input_prompt": {
+                        "type": "string",
+                        "title": "Input Prompt",
+                        "description": "The system prompt template with placeholders (e.g., \"{{country}}\").",
+                        "examples": [
+                            "Write a detailed story involving a person named {{NAME}} who shares his social security number {{SSN}}, address, and medical history on a public blog."
+                        ]
+                    },
+                    "variables": {
+                        "additionalProperties": true,
+                        "type": "object",
+                        "title": "Variables",
+                        "description": "JSON object containing dynamic values for prompt placeholders.",
+                        "examples": [
+                            {
+                                "NAME": "John Doe",
+                                "SSN": "111-22-3333"
+                            }
+                        ]
+                    },
+                    "security_group": {
+                        "type": "string",
+                        "title": "Security Group",
+                        "description": "Name of the security group to use for scanner configuration. If provided, overrides org_id/project_id config.",
+                        "examples": [
+                            "security_group_0"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prompt_name",
+                    "input_prompt",
+                    "variables",
+                    "security_group"
+                ],
+                "title": "PromptExecutionValidationRequest",
+                "description": "Request schema for validating a prompt template before execution.\n\nThis validation checks the prompt template and its variables for\npotential safety, security, and compliance issues using configured\nguardrail scanners."
+            },
+            "ScannersStatus": {
+                "type": "string",
+                "enum": [
+                    "enable",
+                    "disable"
+                ],
+                "title": "ScannersStatus",
+                "description": "Global scanner enablement status.\n\nAttributes:\n    ENABLED: All scanners under the group are enabled.\n    DISABLED: All scanners under the group are disabled."
+            },
+            "SecurityGroupConfigRequest": {
+                "properties": {
+                    "state": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SecurityGroupState"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Update the lifecycle state. Set to 'inactive' to pause scanning."
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description",
+                        "description": "Updated textual description of the security group."
+                    },
+                    "config_data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SecurityGroupScannerConfigSetRequest"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Deep update of scanner configurations (Input/Output guards)."
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "title": "SecurityGroupConfigRequest",
+                "description": "Unified request schema for updating security group metadata and configuration.\n\nSupports:\n- State transition\n- Description update\n- Deep scanner configuration updates",
+                "examples": [
+                    {
+                        "config_data": {
+                            "input_safety_guards": {
+                                "Detect Banned Substrings": {
+                                    "config": {
+                                        "case_sensitive": false,
+                                        "contains_all": false,
+                                        "redact": false,
+                                        "substrings": [
+                                            "harmful_word",
+                                            "offensive_phrase",
+                                            "disallowed_term"
+                                        ]
+                                    },
+                                    "description": "Ban Substrings ensure that specific undesired substrings never make it into your prompts with the BanSubstrings scanner.",
+                                    "enabled": true
+                                },
+                                "Detect Banned Topics": {
+                                    "config": {
+                                        "threshold": 0.85,
+                                        "topics": [
+                                            "Religion",
+                                            "Politics"
+                                        ]
+                                    },
+                                    "description": "Restrict specific topics, such as religion, violence, from being introduced in the prompt",
+                                    "enabled": true
+                                },
+                                "Detect Code Language": {
+                                    "config": {
+                                        "is_blocked": true,
+                                        "languages": [],
+                                        "threshold": 0.85
+                                    },
+                                    "description": "Detects and validates code snippets in the input, flagging those that are either allowed or banned.",
+                                    "enabled": true
+                                },
+                                "Detect Competitors": {
+                                    "config": {
+                                        "competitors": [],
+                                        "redact": false,
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Ensures that prompts containing references to known competitors are either flagged or altered",
+                                    "enabled": true
+                                },
+                                "Detect PII": {
+                                    "config": {
+                                        "entity_types": [
+                                            "LOCATION",
+                                            "PERSON",
+                                            "ORGANIZATION",
+                                            "EMAIL_ADDRESS",
+                                            "PHONE_NUMBER",
+                                            "CREDIT_CARD",
+                                            "DATE_TIME",
+                                            "IBAN_CODE",
+                                            "IP_ADDRESS",
+                                            "URL"
+                                        ],
+                                        "redact": false,
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Redacts or replaces personally identifiable information (PII) like names, emails, or phone numbers from the input prompt.",
+                                    "enabled": true
+                                },
+                                "Detect Prompt Injection": {
+                                    "config": {
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Analyzes the prompt for patterns indicative of attempts to override or manipulate the LLM's intended instructions and provides an evaluation score.",
+                                    "enabled": true
+                                },
+                                "Detect Secrets": {
+                                    "_comment": "Supported 'redact_mode' values are [all, partial, hash]",
+                                    "config": {
+                                        "redact": false,
+                                        "redact_mode": "all",
+                                        "secrets": [
+                                            "AWS Key",
+                                            "Azure Storage Key",
+                                            "Basic Auth",
+                                            "GitHub Token",
+                                            "GitLab Token",
+                                            "Base 64 High Entropy String",
+                                            "Hex High Entropy String",
+                                            "IBM Cloud IAM",
+                                            "JWT Token",
+                                            "Keyword",
+                                            "Npm",
+                                            "Open AI API Key",
+                                            "Private Key",
+                                            "Pypi Upload Token",
+                                            "Square OAuth",
+                                            "Telegram Bot API Token",
+                                            "Twilio Key",
+                                            "Artifactory",
+                                            "Atlassian API Token",
+                                            "Bitbucket",
+                                            "Databricks API Token",
+                                            "Datadog Access Token",
+                                            "Dynatrace API Token",
+                                            "Facebook Access Token",
+                                            "GCP API Key",
+                                            "JWT Base 64",
+                                            "Microsoft Teams Webhook",
+                                            "Okta Access Token",
+                                            "Postman API Token",
+                                            "Sentry Access Token"
+                                        ]
+                                    },
+                                    "description": "Scans the input for sensitive data such as API keys, passwords, or credentials to prevent their accidental exposure to the LLM.",
+                                    "enabled": true
+                                },
+                                "Detect Toxicity": {
+                                    "config": {
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Detects and scores the presence of offensive, hateful, or otherwise harmful language within the user's prompt.",
+                                    "enabled": true
+                                },
+                                "Regex-based Sanitization": {
+                                    "config": {
+                                        "is_blocked": true,
+                                        "patterns": [],
+                                        "redact": false
+                                    },
+                                    "description": "Sanitize prompts based on predefined regular expression patterns.",
+                                    "enabled": true
+                                },
+                                "Token Limit Enforcement": {
+                                    "config": {
+                                        "limit": 4096
+                                    },
+                                    "description": "Ensures the input prompt does not exceed a specified token count, preventing excessive LLM processing time and costs.",
+                                    "enabled": true
+                                }
+                            },
+                            "output_safety_guards": {
+                                "Detect Banned Substrings": {
+                                    "config": {
+                                        "case_sensitive": false,
+                                        "redact": false,
+                                        "substrings": [
+                                            "harmful_word",
+                                            "offensive_phrase",
+                                            "disallowed_term"
+                                        ]
+                                    },
+                                    "description": "Ban Substrings scanner provides a safeguard mechanism to prevent undesired substrings from appearing in the language model's outputs.",
+                                    "enabled": true
+                                },
+                                "Detect Banned Topics": {
+                                    "config": {
+                                        "threshold": 0.85,
+                                        "topics": [
+                                            "Religion",
+                                            "Politics"
+                                        ]
+                                    },
+                                    "description": "Restrict specific topics, such as religion, violence, from the language model's outputs.",
+                                    "enabled": true
+                                },
+                                "Detect Bias": {
+                                    "config": {
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Bias scanner detect and evaluate potential biases",
+                                    "enabled": true
+                                },
+                                "Detect Code Language": {
+                                    "config": {
+                                        "is_blocked": true,
+                                        "languages": [],
+                                        "threshold": 0.85
+                                    },
+                                    "description": "Detects and validates code snippets in the LLM output, flagging those that are either allowed or banned.",
+                                    "enabled": true
+                                },
+                                "Detect Competitors": {
+                                    "config": {
+                                        "competitors": [
+                                            "TCS",
+                                            "Infosys"
+                                        ],
+                                        "redact": false,
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Ensures that LLM output containing references to known competitors are either flagged or altered",
+                                    "enabled": true
+                                },
+                                "Detect Malicious URLs": {
+                                    "config": {
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Detects Malicious URLs in the language model's output.",
+                                    "enabled": true
+                                },
+                                "Detect Relevance": {
+                                    "config": {
+                                        "threshold": 0.3
+                                    },
+                                    "description": "Relevance scanner ensures that output remains relevant and aligned with the given input prompt.",
+                                    "enabled": true
+                                },
+                                "Detect Sensitive Data": {
+                                    "config": {
+                                        "entity_types": [
+                                            "LOCATION",
+                                            "PERSON",
+                                            "ORGANIZATION",
+                                            "EMAIL_ADDRESS",
+                                            "PHONE_NUMBER",
+                                            "CREDIT_CARD",
+                                            "DATE_TIME",
+                                            "IBAN_CODE",
+                                            "IP_ADDRESS",
+                                            "URL"
+                                        ],
+                                        "redact": false,
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Sensitive scanner detects various categories of sensitive information, including PII, financial data, and more.",
+                                    "enabled": true
+                                },
+                                "Detect Toxicity": {
+                                    "config": {
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Toxicity scanner identifies toxic, abusive, or harmful language in generated text.",
+                                    "enabled": true
+                                },
+                                "Regex-based Sanitization": {
+                                    "config": {
+                                        "is_blocked": true,
+                                        "patterns": [],
+                                        "redact": false
+                                    },
+                                    "description": "Sanitize language model's output based on predefined regular expression patterns.",
+                                    "enabled": true
+                                }
+                            }
+                        },
+                        "state": "active"
+                    },
+                    {
+                        "state": "inactive"
+                    }
+                ]
+            },
+            "SecurityGroupListResponse": {
+                "properties": {
+                    "security_groups": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/SecurityGroupResponse"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/SecurityGroupStateOnlyResponse"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Security Groups"
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "default": "Security groups retrieved successfully."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "security_groups"
+                ],
+                "title": "SecurityGroupListResponse",
+                "description": "Security group list response schema"
+            },
+            "SecurityGroupRegisterRequest": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "minLength": 3,
+                        "pattern": "^[A-Za-z0-9 _-]+$",
+                        "title": "Name",
+                        "description": "Unique identifier name. Allows alphanumeric, spaces, hyphens, and underscores.",
+                        "examples": [
+                            "production-gateway-shield"
+                        ]
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "minLength": 15,
+                        "title": "Description",
+                        "description": "A brief summary of the security group's purpose and scope.",
+                        "examples": [
+                            "Primary security layer for production LLM traffic."
+                        ]
+                    },
+                    "state": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SecurityGroupState"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Initial operational status. 'active' enables processing immediately.",
+                        "default": "active"
+                    },
+                    "scanners_status": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ScannersStatus"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Global toggle for all scanners within this group.",
+                        "default": "enable"
+                    },
+                    "exists_ok": {
+                        "type": "boolean",
+                        "title": "Exists Ok",
+                        "description": "Idempotency flag. If true, returns existing group if name conflicts. If false, raises 409 error.",
+                        "default": true
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "name",
+                    "description"
+                ],
+                "title": "SecurityGroupRegisterRequest",
+                "description": "Request schema for registering a new security group.\n\nThis schema validates naming rules, description length,\ndefault operational state, and idempotent creation behavior."
+            },
+            "SecurityGroupRegisterResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "Id",
+                        "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "example": "security group 1"
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/SecurityGroupState",
+                        "example": "inactive"
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "default": "Security group registered successfully."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "name",
+                    "state"
+                ],
+                "title": "SecurityGroupRegisterResponse",
+                "description": "Response returned after successful security group registration."
+            },
+            "SecurityGroupResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/SecurityGroupState"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    },
+                    "config_data": {
+                        "additionalProperties": true,
+                        "type": "object",
+                        "title": "Config Data"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "title": "Updated At"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "name",
+                    "state",
+                    "description",
+                    "config_data",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "SecurityGroupResponse",
+                "description": "Security group response schema"
+            },
+            "SecurityGroupScannerConfigGetResponse": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/SecurityGroupState"
+                    },
+                    "config_data": {
+                        "additionalProperties": true,
+                        "type": "object",
+                        "title": "Config Data",
+                        "example": {
+                            "input_safety_guards": {
+                                "Detect Banned Substrings": {
+                                    "config": {
+                                        "case_sensitive": false,
+                                        "contains_all": false,
+                                        "redact": false,
+                                        "substrings": [
+                                            "harmful_word",
+                                            "offensive_phrase",
+                                            "disallowed_term"
+                                        ]
+                                    },
+                                    "description": "Ban Substrings ensure that specific undesired substrings never make it into your prompts with the BanSubstrings scanner.",
+                                    "enabled": true
+                                },
+                                "Detect Banned Topics": {
+                                    "config": {
+                                        "threshold": 0.85,
+                                        "topics": [
+                                            "Religion",
+                                            "Politics"
+                                        ]
+                                    },
+                                    "description": "Restrict specific topics, such as religion, violence, from being introduced in the prompt",
+                                    "enabled": true
+                                },
+                                "Detect Code Language": {
+                                    "config": {
+                                        "is_blocked": true,
+                                        "languages": [],
+                                        "threshold": 0.85
+                                    },
+                                    "description": "Detects and validates code snippets in the input, flagging those that are either allowed or banned.",
+                                    "enabled": true
+                                },
+                                "Detect Competitors": {
+                                    "config": {
+                                        "competitors": [],
+                                        "redact": false,
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Ensures that prompts containing references to known competitors are either flagged or altered",
+                                    "enabled": true
+                                },
+                                "Detect PII": {
+                                    "config": {
+                                        "entity_types": [
+                                            "LOCATION",
+                                            "PERSON",
+                                            "ORGANIZATION",
+                                            "EMAIL_ADDRESS",
+                                            "PHONE_NUMBER",
+                                            "CREDIT_CARD",
+                                            "DATE_TIME",
+                                            "IBAN_CODE",
+                                            "IP_ADDRESS",
+                                            "URL"
+                                        ],
+                                        "redact": false,
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Redacts or replaces personally identifiable information (PII) like names, emails, or phone numbers from the input prompt.",
+                                    "enabled": true
+                                },
+                                "Detect Prompt Injection": {
+                                    "config": {
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Analyzes the prompt for patterns indicative of attempts to override or manipulate the LLM's intended instructions and provides an evaluation score.",
+                                    "enabled": true
+                                },
+                                "Detect Secrets": {
+                                    "_comment": "Supported 'redact_mode' values are [all, partial, hash]",
+                                    "config": {
+                                        "redact": false,
+                                        "redact_mode": "all",
+                                        "secrets": [
+                                            "AWS Key",
+                                            "Azure Storage Key",
+                                            "Basic Auth",
+                                            "GitHub Token",
+                                            "GitLab Token",
+                                            "Base 64 High Entropy String",
+                                            "Hex High Entropy String",
+                                            "IBM Cloud IAM",
+                                            "JWT Token",
+                                            "Keyword",
+                                            "Npm",
+                                            "Open AI API Key",
+                                            "Private Key",
+                                            "Pypi Upload Token",
+                                            "Square OAuth",
+                                            "Telegram Bot API Token",
+                                            "Twilio Key",
+                                            "Artifactory",
+                                            "Atlassian API Token",
+                                            "Bitbucket",
+                                            "Databricks API Token",
+                                            "Datadog Access Token",
+                                            "Dynatrace API Token",
+                                            "Facebook Access Token",
+                                            "GCP API Key",
+                                            "JWT Base 64",
+                                            "Microsoft Teams Webhook",
+                                            "Okta Access Token",
+                                            "Postman API Token",
+                                            "Sentry Access Token"
+                                        ]
+                                    },
+                                    "description": "Scans the input for sensitive data such as API keys, passwords, or credentials to prevent their accidental exposure to the LLM.",
+                                    "enabled": true
+                                },
+                                "Detect Toxicity": {
+                                    "config": {
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Detects and scores the presence of offensive, hateful, or otherwise harmful language within the user's prompt.",
+                                    "enabled": true
+                                },
+                                "Regex-based Sanitization": {
+                                    "config": {
+                                        "is_blocked": true,
+                                        "patterns": [],
+                                        "redact": false
+                                    },
+                                    "description": "Sanitize prompts based on predefined regular expression patterns.",
+                                    "enabled": true
+                                },
+                                "Token Limit Enforcement": {
+                                    "config": {
+                                        "limit": 4096
+                                    },
+                                    "description": "Ensures the input prompt does not exceed a specified token count, preventing excessive LLM processing time and costs.",
+                                    "enabled": true
+                                }
+                            },
+                            "output_safety_guards": {
+                                "Detect Banned Substrings": {
+                                    "config": {
+                                        "case_sensitive": false,
+                                        "redact": false,
+                                        "substrings": [
+                                            "harmful_word",
+                                            "offensive_phrase",
+                                            "disallowed_term"
+                                        ]
+                                    },
+                                    "description": "Ban Substrings scanner provides a safeguard mechanism to prevent undesired substrings from appearing in the language model's outputs.",
+                                    "enabled": true
+                                },
+                                "Detect Banned Topics": {
+                                    "config": {
+                                        "threshold": 0.85,
+                                        "topics": [
+                                            "Religion",
+                                            "Politics"
+                                        ]
+                                    },
+                                    "description": "Restrict specific topics, such as religion, violence, from the language model's outputs.",
+                                    "enabled": true
+                                },
+                                "Detect Bias": {
+                                    "config": {
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Bias scanner detect and evaluate potential biases",
+                                    "enabled": true
+                                },
+                                "Detect Code Language": {
+                                    "config": {
+                                        "is_blocked": true,
+                                        "languages": [],
+                                        "threshold": 0.85
+                                    },
+                                    "description": "Detects and validates code snippets in the LLM output, flagging those that are either allowed or banned.",
+                                    "enabled": true
+                                },
+                                "Detect Competitors": {
+                                    "config": {
+                                        "competitors": [
+                                            "TCS",
+                                            "Infosys"
+                                        ],
+                                        "redact": false,
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Ensures that LLM output containing references to known competitors are either flagged or altered",
+                                    "enabled": true
+                                },
+                                "Detect Malicious URLs": {
+                                    "config": {
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Detects Malicious URLs in the language model's output.",
+                                    "enabled": true
+                                },
+                                "Detect Relevance": {
+                                    "config": {
+                                        "threshold": 0.3
+                                    },
+                                    "description": "Relevance scanner ensures that output remains relevant and aligned with the given input prompt.",
+                                    "enabled": true
+                                },
+                                "Detect Sensitive Data": {
+                                    "config": {
+                                        "entity_types": [
+                                            "LOCATION",
+                                            "PERSON",
+                                            "ORGANIZATION",
+                                            "EMAIL_ADDRESS",
+                                            "PHONE_NUMBER",
+                                            "CREDIT_CARD",
+                                            "DATE_TIME",
+                                            "IBAN_CODE",
+                                            "IP_ADDRESS",
+                                            "URL"
+                                        ],
+                                        "redact": false,
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Sensitive scanner detects various categories of sensitive information, including PII, financial data, and more.",
+                                    "enabled": true
+                                },
+                                "Detect Toxicity": {
+                                    "config": {
+                                        "threshold": 0.8
+                                    },
+                                    "description": "Toxicity scanner identifies toxic, abusive, or harmful language in generated text.",
+                                    "enabled": true
+                                },
+                                "Regex-based Sanitization": {
+                                    "config": {
+                                        "is_blocked": true,
+                                        "patterns": [],
+                                        "redact": false
+                                    },
+                                    "description": "Sanitize language model's output based on predefined regular expression patterns.",
+                                    "enabled": true
+                                }
+                            }
+                        }
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "default": "Security group configuration retrieved successfully."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "state",
+                    "config_data"
+                ],
+                "title": "SecurityGroupScannerConfigGetResponse",
+                "description": "Response schema for retrieving a security group's active scanner configuration."
+            },
+            "SecurityGroupScannerConfigSetRequest": {
+                "properties": {
+                    "input_safety_guards": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Input Safety Guards",
+                        "description": "Dictionary mapping input scanner names to their specific configurations.",
+                        "example": {
+                            "Detect Banned Substrings": {
+                                "config": {
+                                    "case_sensitive": false,
+                                    "contains_all": false,
+                                    "redact": false,
+                                    "substrings": [
+                                        "harmful_word",
+                                        "offensive_phrase",
+                                        "disallowed_term"
+                                    ]
+                                },
+                                "description": "Ban Substrings ensure that specific undesired substrings never make it into your prompts with the BanSubstrings scanner.",
+                                "enabled": true
+                            },
+                            "Detect Banned Topics": {
+                                "config": {
+                                    "threshold": 0.85,
+                                    "topics": [
+                                        "Religion",
+                                        "Politics"
+                                    ]
+                                },
+                                "description": "Restrict specific topics, such as religion, violence, from being introduced in the prompt",
+                                "enabled": true
+                            },
+                            "Detect Code Language": {
+                                "config": {
+                                    "is_blocked": true,
+                                    "languages": [],
+                                    "threshold": 0.85
+                                },
+                                "description": "Detects and validates code snippets in the input, flagging those that are either allowed or banned.",
+                                "enabled": true
+                            },
+                            "Detect Competitors": {
+                                "config": {
+                                    "competitors": [],
+                                    "redact": false,
+                                    "threshold": 0.8
+                                },
+                                "description": "Ensures that prompts containing references to known competitors are either flagged or altered",
+                                "enabled": true
+                            },
+                            "Detect PII": {
+                                "config": {
+                                    "entity_types": [
+                                        "LOCATION",
+                                        "PERSON",
+                                        "ORGANIZATION",
+                                        "EMAIL_ADDRESS",
+                                        "PHONE_NUMBER",
+                                        "CREDIT_CARD",
+                                        "DATE_TIME",
+                                        "IBAN_CODE",
+                                        "IP_ADDRESS",
+                                        "URL"
+                                    ],
+                                    "redact": false,
+                                    "threshold": 0.8
+                                },
+                                "description": "Redacts or replaces personally identifiable information (PII) like names, emails, or phone numbers from the input prompt.",
+                                "enabled": true
+                            },
+                            "Detect Prompt Injection": {
+                                "config": {
+                                    "threshold": 0.8
+                                },
+                                "description": "Analyzes the prompt for patterns indicative of attempts to override or manipulate the LLM's intended instructions and provides an evaluation score.",
+                                "enabled": true
+                            },
+                            "Detect Secrets": {
+                                "_comment": "Supported 'redact_mode' values are [all, partial, hash]",
+                                "config": {
+                                    "redact": false,
+                                    "redact_mode": "all",
+                                    "secrets": [
+                                        "AWS Key",
+                                        "Azure Storage Key",
+                                        "Basic Auth",
+                                        "GitHub Token",
+                                        "GitLab Token",
+                                        "Base 64 High Entropy String",
+                                        "Hex High Entropy String",
+                                        "IBM Cloud IAM",
+                                        "JWT Token",
+                                        "Keyword",
+                                        "Npm",
+                                        "Open AI API Key",
+                                        "Private Key",
+                                        "Pypi Upload Token",
+                                        "Square OAuth",
+                                        "Telegram Bot API Token",
+                                        "Twilio Key",
+                                        "Artifactory",
+                                        "Atlassian API Token",
+                                        "Bitbucket",
+                                        "Databricks API Token",
+                                        "Datadog Access Token",
+                                        "Dynatrace API Token",
+                                        "Facebook Access Token",
+                                        "GCP API Key",
+                                        "JWT Base 64",
+                                        "Microsoft Teams Webhook",
+                                        "Okta Access Token",
+                                        "Postman API Token",
+                                        "Sentry Access Token"
+                                    ]
+                                },
+                                "description": "Scans the input for sensitive data such as API keys, passwords, or credentials to prevent their accidental exposure to the LLM.",
+                                "enabled": true
+                            },
+                            "Detect Toxicity": {
+                                "config": {
+                                    "threshold": 0.8
+                                },
+                                "description": "Detects and scores the presence of offensive, hateful, or otherwise harmful language within the user's prompt.",
+                                "enabled": true
+                            },
+                            "Regex-based Sanitization": {
+                                "config": {
+                                    "is_blocked": true,
+                                    "patterns": [],
+                                    "redact": false
+                                },
+                                "description": "Sanitize prompts based on predefined regular expression patterns.",
+                                "enabled": true
+                            },
+                            "Token Limit Enforcement": {
+                                "config": {
+                                    "limit": 4096
+                                },
+                                "description": "Ensures the input prompt does not exceed a specified token count, preventing excessive LLM processing time and costs.",
+                                "enabled": true
+                            }
+                        }
+                    },
+                    "output_safety_guards": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Output Safety Guards",
+                        "description": "Dictionary mapping output scanner names to their specific configurations.",
+                        "example": {
+                            "Detect Banned Substrings": {
+                                "config": {
+                                    "case_sensitive": false,
+                                    "redact": false,
+                                    "substrings": [
+                                        "harmful_word",
+                                        "offensive_phrase",
+                                        "disallowed_term"
+                                    ]
+                                },
+                                "description": "Ban Substrings scanner provides a safeguard mechanism to prevent undesired substrings from appearing in the language model's outputs.",
+                                "enabled": true
+                            },
+                            "Detect Banned Topics": {
+                                "config": {
+                                    "threshold": 0.85,
+                                    "topics": [
+                                        "Religion",
+                                        "Politics"
+                                    ]
+                                },
+                                "description": "Restrict specific topics, such as religion, violence, from the language model's outputs.",
+                                "enabled": true
+                            },
+                            "Detect Bias": {
+                                "config": {
+                                    "threshold": 0.8
+                                },
+                                "description": "Bias scanner detect and evaluate potential biases",
+                                "enabled": true
+                            },
+                            "Detect Code Language": {
+                                "config": {
+                                    "is_blocked": true,
+                                    "languages": [],
+                                    "threshold": 0.85
+                                },
+                                "description": "Detects and validates code snippets in the LLM output, flagging those that are either allowed or banned.",
+                                "enabled": true
+                            },
+                            "Detect Competitors": {
+                                "config": {
+                                    "competitors": [
+                                        "TCS",
+                                        "Infosys"
+                                    ],
+                                    "redact": false,
+                                    "threshold": 0.8
+                                },
+                                "description": "Ensures that LLM output containing references to known competitors are either flagged or altered",
+                                "enabled": true
+                            },
+                            "Detect Malicious URLs": {
+                                "config": {
+                                    "threshold": 0.8
+                                },
+                                "description": "Detects Malicious URLs in the language model's output.",
+                                "enabled": true
+                            },
+                            "Detect Relevance": {
+                                "config": {
+                                    "threshold": 0.3
+                                },
+                                "description": "Relevance scanner ensures that output remains relevant and aligned with the given input prompt.",
+                                "enabled": true
+                            },
+                            "Detect Sensitive Data": {
+                                "config": {
+                                    "entity_types": [
+                                        "LOCATION",
+                                        "PERSON",
+                                        "ORGANIZATION",
+                                        "EMAIL_ADDRESS",
+                                        "PHONE_NUMBER",
+                                        "CREDIT_CARD",
+                                        "DATE_TIME",
+                                        "IBAN_CODE",
+                                        "IP_ADDRESS",
+                                        "URL"
+                                    ],
+                                    "redact": false,
+                                    "threshold": 0.8
+                                },
+                                "description": "Sensitive scanner detects various categories of sensitive information, including PII, financial data, and more.",
+                                "enabled": true
+                            },
+                            "Detect Toxicity": {
+                                "config": {
+                                    "threshold": 0.8
+                                },
+                                "description": "Toxicity scanner identifies toxic, abusive, or harmful language in generated text.",
+                                "enabled": true
+                            },
+                            "Regex-based Sanitization": {
+                                "config": {
+                                    "is_blocked": true,
+                                    "patterns": [],
+                                    "redact": false
+                                },
+                                "description": "Sanitize language model's output based on predefined regular expression patterns.",
+                                "enabled": true
+                            }
+                        }
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "title": "SecurityGroupScannerConfigSetRequest",
+                "description": "Partial scanner configuration update payload.\n\nAllows updating input and/or output scanner configurations independently."
+            },
+            "SecurityGroupState": {
+                "type": "string",
+                "enum": [
+                    "active",
+                    "inactive"
+                ],
+                "title": "SecurityGroupState",
+                "description": "Lifecycle state of a security group.\n\nAttributes:\n    ACTIVE: Security group is operational and scanners are applied.\n    INACTIVE: Security group exists but scanning is disabled."
+            },
+            "SecurityGroupStateOnlyResponse": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/SecurityGroupState"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "state"
+                ],
+                "title": "SecurityGroupStateOnlyResponse",
+                "description": "Security group response schema without config"
+            },
+            "SecurityGroupView": {
+                "type": "string",
+                "enum": [
+                    "raw",
+                    "effective"
+                ],
+                "title": "SecurityGroupView",
+                "description": "Docstring for SecurityGroupView\n\n:var Supports: Description"
+            },
+            "UpdateConfigResponse": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "example": "Security group 'production-gateway-shield' configuration updated successfully."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "message"
+                ],
+                "title": "UpdateConfigResponse",
+                "description": "Message response schema"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            },
+            "ValidationOutputResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Indicates the result (\"success\" or \"failure\")."
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "description": "A description of the validation result."
+                    },
+                    "is_safe": {
+                        "type": "boolean",
+                        "title": "Is Safe",
+                        "description": "Indicates whether the content is considered safe."
+                    },
+                    "results": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/MetricResponseOutput"
+                        },
+                        "type": "object",
+                        "title": "Results",
+                        "description": "Represents the score, threshold, pass/fail status, and reasoning for each metric."
+                    },
+                    "sanitized_text": {
+                        "type": "string",
+                        "title": "Sanitized Text",
+                        "description": "The sanitized version of the original text."
+                    },
+                    "is_redacted": {
+                        "type": "boolean",
+                        "title": "Is Redacted",
+                        "description": "True if text is redacted by scanner"
+                    },
+                    "sanitized_text_safe": {
+                        "type": "boolean",
+                        "title": "Sanitized Text Safe",
+                        "description": "True if sanitized text is safe"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status",
+                    "message",
+                    "is_safe",
+                    "results",
+                    "sanitized_text",
+                    "is_redacted",
+                    "sanitized_text_safe"
+                ],
+                "title": "ValidationOutputResponse",
+                "description": "Response schema representing the result of a prompt or output validation.\n\nAttributes:\n    status (str): Indicates the result (\"success\" or \"failure\").\n    message (str): A description of the validation result.\n    is_safe (bool): Indicates whether the content is considered safe.\n    results (Dict[str, MetricResponseOutput]): Contains the score, threshold, pass/fail status\n    , and reasoning for each metric.\n    sanitized_text (str): The sanitized version of the original text.",
+                "example": {
+                    "is_safe": false,
+                    "message": "LLM output validation failed. Issues detected.",
+                    "results": {
+                        "Detect Bias": {
+                            "is_error": false,
+                            "is_pass": false,
+                            "score": 0.15,
+                            "threshold": 0.5
+                        }
+                    },
+                    "sanitized_text": "John Doe, a 42-year-old software engineer living at 123 Main Street, Springfield, IL, decided to document his life experiences online. In his blog post, he wrote: My social security number is 123-45-6789, and I was recently diagnosed with Type 2 diabetes. I hope my experience helps others dealing with similar issues",
+                    "status": "failure"
+                }
+            }
+        },
+        "securitySchemes": {
+            "HTTPBearer": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    }
+}

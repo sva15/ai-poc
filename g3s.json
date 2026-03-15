@@ -1,0 +1,3527 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "AI Force: GenAI Gateway & Guardrail Service(G3S)",
+        "description": "The AI Force: GenAI Gateway & Guardrail Service(G3S) API provides endpoints\n        for managing configurations, handling chat completions, embeddings,\n        and security-related operations. It supports functionalities such as saving,\n        updating, deleting, and listing configurations for Large Language Models (LLMs),\n        embeddings, speech models, and security settings.\n        The API also includes endpoint for health checks,\n        ensuring robust integration and monitoring capabilities.\n        Authentication is enforced using HTTP Bearer tokens.",
+        "version": "2.0.1"
+    },
+    "paths": {
+        "/g3s/llm/embeddings": {
+            "post": {
+                "tags": [
+                    "llm"
+                ],
+                "summary": "Embeddings",
+                "description": "Handle embedding requests.\nArgs:\n    request (EmbeddingRequest): The embedding request.\n    service (ChatModelService): The chat model service.",
+                "operationId": "embeddings_g3s_llm_embeddings_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmbeddingRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EmbeddingModelResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/g3s/llm/call": {
+            "post": {
+                "tags": [
+                    "llm"
+                ],
+                "summary": "Llm Call",
+                "description": "Handle LLM call requests.\nArgs:\n    request (LLMCallRequest): The LLM call request.\n    service (ChatModelService): The chat model service.",
+                "operationId": "llm_call_g3s_llm_call_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LLMCallRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatCompletionResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/g3s/configuration/save_llm_configuration": {
+            "post": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "Save Llm Configuration",
+                "description": "Save a new LLM configuration.\n\nArgs:\n    request (LLMConfig): Configuration data to save.\n    service (ConfigService): Service layer for handling logic.\n\nReturns:\n    BaseResponse[dict]: Success message and saved config data.",
+                "operationId": "save_llm_configuration_g3s_configuration_save_llm_configuration_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LLMConfig"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/app__schema__response_schema__BaseResponse[LLMConfigResponse]"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/g3s/configuration/delete_llm_configuration": {
+            "delete": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "Delete Llm Configuration",
+                "description": "Delete an existing LLM (Large Language Model) configuration.\n\nArgs:\n    config_id (int): The unique identifier of the LLM configuration to be deleted.\n    service (ConfigService): Service layer for handling logic.\n\nReturns:\n    BaseResponse[dict]: Success message and deletion result.",
+                "operationId": "delete_llm_configuration_g3s_configuration_delete_llm_configuration_delete",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "config_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Config Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_DeleteLLMConfig_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/g3s/configuration/update_llm_configuration/{config_id}": {
+            "put": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "Update Llm Configuration",
+                "description": "Update an existing LLM configuration.\n\nArgs:\n    request (LLMConfig): Updated configuration data.\n    config_id (int): ID of the config to update.\n    service (ConfigService): Service layer for handling logic.\n\nReturns:\n    BaseResponse[dict]: Success message and updated config data.",
+                "operationId": "update_llm_configuration_g3s_configuration_update_llm_configuration__config_id__put",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "config_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Config Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LLMConfig"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/app__schema__response_schema__BaseResponse[LLMConfigResponse]"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/g3s/configuration/list_llm_configuration": {
+            "get": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "List Llm Configuration",
+                "description": "List all LLM configurations for a specific project.\n\nArgs:\n    project_id (int): ID of the project.\n    service (ConfigService): Service layer for handling logic.\n\nReturns:\n    BaseResponse[list]: List of LLM configurations.",
+                "operationId": "list_llm_configuration_g3s_configuration_list_llm_configuration_get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 2147483647,
+                            "minimum": 1,
+                            "description": "Page number for pagination.",
+                            "default": 1,
+                            "title": "Page"
+                        },
+                        "description": "Page number for pagination."
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "description": "Number of items per page.",
+                            "default": 100,
+                            "title": "Page Size"
+                        },
+                        "description": "Number of items per page."
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 255,
+                                    "pattern": "(^$|^[a-zA-Z][a-zA-Z0-9 _-]*$)"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Search term for prompt",
+                            "title": "Search"
+                        },
+                        "description": "Search term for prompt"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseListResponse_list_LLMConfigResponse__"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/g3s/configuration/llm_configuration/{llm_id}": {
+            "get": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "Llm Configuration",
+                "description": "Gives LLM configuration for a specific ID.\n\nArgs:\n    llm_id (int): ID of the LLM Configuration.\n    service (ConfigService): Service layer for handling logic.\n\nReturns:\n    BaseResponse[dict]: LLM configuration.",
+                "operationId": "llm_configuration_g3s_configuration_llm_configuration__llm_id__get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "llm_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Llm Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/app__schema__response_schema__BaseResponse_LLMConfigResponse___2"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/g3s/configuration/save_embedding_configuration": {
+            "post": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "Save Embedding Configuration",
+                "description": "Endpoint to save the embedding configuration.\n\nThis endpoint accepts a POST request with an embedding configuration object\nand saves it using the `EmbeddingServices` service. The configuration data\nis processed and stored, with a success response returned upon completion.\n\nArgs:\nrequest (EmbeddingConfig): The embedding configuration data to be saved.\nservice (EmbeddingServices, optional): The embedding service used to\nhandle the saving logic. It is injected via dependency injection.\n\nReturns:\nBaseResponse[dict]: A response object containing the status, message,\nand the resulting data after saving the embedding configuration.\nThe message will indicate the success of the operation.\n\nRaises:\nHTTPException: If there is an error during the embedding configuration\nsave process, an HTTP error is raised with an appropriate message.",
+                "operationId": "save_embedding_configuration_g3s_configuration_save_embedding_configuration_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmbeddingConfig"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_EmbeddingResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/g3s/configuration/delete_embedding_configuration": {
+            "delete": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "Delete Embedding Configuration",
+                "description": "Delete an existing Embedding configuration.\n\nArgs:\n    config_id (int): The unique identifier of the embedding configuration to be deleted.\n    service (ConfigService): Service layer for handling logic.\n\nReturns:\n    BaseResponse[dict]: Success message and deletion result.",
+                "operationId": "delete_embedding_configuration_g3s_configuration_delete_embedding_configuration_delete",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "config_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Config Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_DeleteEmbeddingConfig_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/g3s/configuration/update_embedding_configuration/{config_id}": {
+            "put": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "Update Embedding Configuration",
+                "description": "Updates the embedding configuration for a given config ID.\n\nThis endpoint allows for the modification of the embedding configuration\nbased on the provided `config_id`. The request body should contain the\nupdated embedding configuration details. The service will process the update\nand return the result of the operation.\n\nArgs:\n    request (EmbeddingConfig): The updated embedding configuration details.\n    config_id (int): The unique ID of the embedding configuration to update.\n    service (EmbeddingServices, optional): The service responsible for updating\n                                            the embedding configuration.\n\nReturns:\n    BaseResponse[dict]: A response object containing a success status,\n                         a success message, and the result of the update operation.\n\nRaises:\n    HTTPException: If the update fails, an HTTP error will be raised with\n                   an appropriate status and error message.",
+                "operationId": "update_embedding_configuration_g3s_configuration_update_embedding_configuration__config_id__put",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "config_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Config Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmbeddingConfig"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_EmbeddingResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/g3s/configuration/list_embedding_configuration": {
+            "get": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "List Embedding Configuration",
+                "description": "Retrieves a list of embedding configurations for a specific project.\n\nThis endpoint fetches all embedding configurations associated with the provided\n`project_id`. The service layer is used to query the database and return the list\nof configurations, which is then included in the response.\n\nArgs:\n    project_id (int): The unique ID of the project for which embedding configurations\n                       are to be retrieved.\n    service (EmbeddingServices, optional): The service responsible for retrieving\n                                            the embedding configurations.\n\nReturns:\n    BaseResponse[list]: A response object containing a success status, a success message,\n                         and the list of embedding configurations.\n\nRaises:\n    HTTPException: If the service layer fails to retrieve the configurations, an\n                   appropriate HTTP error will be raised.",
+                "operationId": "list_embedding_configuration_g3s_configuration_list_embedding_configuration_get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 2147483647,
+                            "minimum": 1,
+                            "description": "Page number for pagination.",
+                            "default": 1,
+                            "title": "Page"
+                        },
+                        "description": "Page number for pagination."
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "description": "Number of items per page.",
+                            "default": 100,
+                            "title": "Page Size"
+                        },
+                        "description": "Number of items per page."
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 255,
+                                    "pattern": "(^$|^[a-zA-Z][a-zA-Z0-9 _-]*$)"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Search term for prompt",
+                            "title": "Search"
+                        },
+                        "description": "Search term for prompt"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseListResponse_list_EMBConfigResponse__"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/g3s/configuration/save_speech_model_configuration": {
+            "post": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "Save Speech Model Configuration",
+                "description": "Save a new speech model configuration.\n\nArgs:\n    request (SpeechConfigRequest): The configuration data to be saved.\n    service (SpeechConfigService): Service dependency for speech configuration logic.\n\nReturns:\n    BaseResponse[dict]: Success message with the saved configuration data.",
+                "operationId": "save_speech_model_configuration_g3s_configuration_save_speech_model_configuration_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SpeechConfigRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_SpeechConfigResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/g3s/configuration/update_speech_model_configuration/{config_id}": {
+            "put": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "Update Speech Model Configuration",
+                "description": "Update an existing speech model configuration.\n\nArgs:\n    config_id (int): The ID of the configuration to update.\n    request (SpeechConfigRequest): The new configuration data.\n    service (SpeechConfigService): Service dependency for speech configuration logic.\n\nReturns:\n    BaseResponse[dict]: Success message with the updated configuration data.",
+                "operationId": "update_speech_model_configuration_g3s_configuration_update_speech_model_configuration__config_id__put",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "config_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Config Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SpeechConfigRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_SpeechConfigResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/g3s/configuration/delete_speech_model_configuration/{config_id}": {
+            "delete": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "Delete Speech Model Configuration",
+                "description": "Delete a speech model configuration by its ID.\n\nArgs:\n    config_id (int): The ID of the configuration to delete.\n    service (SpeechConfigService): Service dependency for speech configuration logic.\n\nReturns:\n    BaseResponse[dict]: Success message indicating the deletion status.",
+                "operationId": "delete_speech_model_configuration_g3s_configuration_delete_speech_model_configuration__config_id__delete",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "config_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Config Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_SpeechConfigResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/g3s/configuration/list_speech_model_configuration": {
+            "get": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "List Speech Model Configuration",
+                "description": "Retrieve a list of speech model configurations for a given project.\n\nArgs:\n    project_id (int): The ID of the project to fetch configurations for.\n    service (SpeechConfigService): Service dependency for speech configuration logic.\n\nReturns:\n    BaseResponse[list]: Success message with the list of configurations.",
+                "operationId": "list_speech_model_configuration_g3s_configuration_list_speech_model_configuration_get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 2147483647,
+                            "minimum": 1,
+                            "description": "Page number for pagination.",
+                            "default": 1,
+                            "title": "Page"
+                        },
+                        "description": "Page number for pagination."
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "description": "Number of items per page.",
+                            "default": 10,
+                            "title": "Page Size"
+                        },
+                        "description": "Number of items per page."
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 255,
+                                    "pattern": "(^$|^[a-zA-Z][a-zA-Z0-9 _-]*$)"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Search term for prompt",
+                            "title": "Search"
+                        },
+                        "description": "Search term for prompt"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseListResponse_list_SpeechConfigResponse__"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/g3s/configuration/install_packages": {
+            "post": {
+                "tags": [
+                    "configuration"
+                ],
+                "summary": "Install Packages",
+                "description": "API endpoint to install security-related packages based on the provided configuration.\n\nThis function delegates the installation logic to the ScriptConfigService.\nIt returns a BaseResponse indicating whether the operation succeeded or failed.\n\nArgs:\n    request (PackageRequest): The request payload containing package installation details.\n    service (ScriptConfigService): The service responsible for handling package installation.\n\nReturns:\n    dict: A serialized BaseResponse containing the status, message, and result data.",
+                "operationId": "install_packages_g3s_configuration_install_packages_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PackageRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse_dict_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/g3s/model-consumption/consumption": {
+            "get": {
+                "tags": [
+                    "model-consumption"
+                ],
+                "summary": "Get Consumption Records",
+                "description": "Retrieve model consumption records with optional filters.\nIf no filters are applied, returns all records.",
+                "operationId": "get_consumption_records_g3s_model_consumption_consumption_get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "project_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 2147483647,
+                                    "minimum": 1
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by project ID",
+                            "title": "Project Id"
+                        },
+                        "description": "Filter by project ID"
+                    },
+                    {
+                        "name": "config_name",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by configuration name (partial match)",
+                            "title": "Config Name"
+                        },
+                        "description": "Filter by configuration name (partial match)"
+                    },
+                    {
+                        "name": "date_filter",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Date filter: \"last_7_days\", \"last_30_days\", or \"custom\"",
+                            "title": "Date Filter"
+                        },
+                        "description": "Date filter: \"last_7_days\", \"last_30_days\", or \"custom\""
+                    },
+                    {
+                        "name": "custom_start",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Start date for custom filter (ISO format) yyyy-mm-dd",
+                            "title": "Custom Start"
+                        },
+                        "description": "Start date for custom filter (ISO format) yyyy-mm-dd"
+                    },
+                    {
+                        "name": "custom_end",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "End date for custom filter (ISO format) yyyy-mm-dd",
+                            "title": "Custom End"
+                        },
+                        "description": "End date for custom filter (ISO format) yyyy-mm-dd"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConsumptionResponse_List_dict__"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/g3s/model-consumption/config_list": {
+            "get": {
+                "tags": [
+                    "model-consumption"
+                ],
+                "summary": "Get Config Names By Project",
+                "operationId": "get_config_names_by_project_g3s_model_consumption_config_list_get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "lm_type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 2147483647,
+                            "minimum": 1,
+                            "description": "Filter by LLM type (must be 1, 2, or 3)",
+                            "default": 1,
+                            "title": "Lm Type"
+                        },
+                        "description": "Filter by LLM type (must be 1, 2, or 3)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConsumptionResponse_dict_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/check_health": {
+            "get": {
+                "tags": [
+                    "healthcheck"
+                ],
+                "summary": "Perform a Health Check",
+                "description": "## Perform a Health Check\nReturns:\n    HealthCheck: Returns a JSON response with the health status",
+                "operationId": "get_health_check_health_get",
+                "responses": {
+                    "200": {
+                        "description": "Return HTTP Status Code 200 (OK)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HealthCheck"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/": {
+            "get": {
+                "summary": "Read Root",
+                "description": "Telemetry service",
+                "operationId": "read_root__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "BaseListResponse_list_EMBConfigResponse__": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/EMBConfigResponse"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Data"
+                    },
+                    "total": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Total"
+                    },
+                    "page": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Page"
+                    },
+                    "page_size": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Page Size"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseListResponse[list[EMBConfigResponse]]"
+            },
+            "BaseListResponse_list_LLMConfigResponse__": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/app__schema__response_schema__LLMConfigResponse"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Data"
+                    },
+                    "total": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Total"
+                    },
+                    "page": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Page"
+                    },
+                    "page_size": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Page Size"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseListResponse[list[LLMConfigResponse]]"
+            },
+            "BaseListResponse_list_SpeechConfigResponse__": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/app__schema__response_schema__SpeechConfigResponse"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Data"
+                    },
+                    "total": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Total"
+                    },
+                    "page": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Page"
+                    },
+                    "page_size": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Page Size"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseListResponse[list[SpeechConfigResponse]]"
+            },
+            "BaseResponse_DeleteEmbeddingConfig_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DeleteEmbeddingConfig"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[DeleteEmbeddingConfig]"
+            },
+            "BaseResponse_DeleteLLMConfig_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DeleteLLMConfig"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[DeleteLLMConfig]"
+            },
+            "BaseResponse_EmbeddingResponse_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/EmbeddingResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[EmbeddingResponse]"
+            },
+            "BaseResponse_SpeechConfigResponse_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/app__schema__speech_config_schema__SpeechConfigResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[SpeechConfigResponse]"
+            },
+            "BaseResponse_dict_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Data"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[dict]"
+            },
+            "Capability": {
+                "properties": {
+                    "capability": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Capability",
+                        "description": "Name of the capability supported by model(e.g., summarization, translation)."
+                    },
+                    "score": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Score",
+                        "description": "Confidence score or performance rating of the capability."
+                    }
+                },
+                "type": "object",
+                "title": "Capability",
+                "description": "Represents a capability with an associated score.\n\nAttributes:\n    capability (Optional[str]): The name or description of the capability. Defaults to None.\n    score (Optional[float]): The score or rating of the capability. Defaults to None."
+            },
+            "CapabilityItem": {
+                "properties": {
+                    "capability": {
+                        "type": "string",
+                        "title": "Capability"
+                    },
+                    "score": {
+                        "type": "number",
+                        "title": "Score"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "capability",
+                    "score"
+                ],
+                "title": "CapabilityItem",
+                "description": "Represents a single capability item with its associated score.\n\nAttributes:\n    capability (str): Name or type of the capability (e.g., summarization, translation).\n    score (float): Score or weight associated with the capability."
+            },
+            "ChatCompletionResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "Id",
+                        "description": "Unique identifier for the response."
+                    },
+                    "object": {
+                        "type": "string",
+                        "title": "Object",
+                        "description": "Type of the object (e.g., 'chat.completion')."
+                    },
+                    "created": {
+                        "type": "integer",
+                        "title": "Created",
+                        "description": "Timestamp of when the response was created."
+                    },
+                    "model": {
+                        "type": "string",
+                        "title": "Model",
+                        "description": "The name of the model used."
+                    },
+                    "system_fingerprint": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "System Fingerprint",
+                        "description": "System fingerprint for tracking."
+                    },
+                    "choices": {
+                        "items": {
+                            "$ref": "#/components/schemas/Choice"
+                        },
+                        "type": "array",
+                        "title": "Choices",
+                        "description": "List of choices with messages and metadata."
+                    },
+                    "usage": {
+                        "$ref": "#/components/schemas/Usage",
+                        "description": "Token usage details."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "object",
+                    "created",
+                    "model",
+                    "choices",
+                    "usage"
+                ],
+                "title": "ChatCompletionResponse",
+                "description": "Represents the response returned from a chat completion request.\n\nAttributes:\n    id (str): Unique identifier for the response.\n    object (str): Type of the returned object (e.g., 'chat.completion').\n    created (int): Unix timestamp indicating when the response was created.\n    model (str): Identifier for the model used to generate the completion.\n    system_fingerprint (Optional[str]): Fingerprint for tracing\n                        system configuration (if available).\n    choices (List[Choice]): List of response choices including messages and related metadata.\n    usage (Usage): Details about token usage for the prompt and completion."
+            },
+            "Choice": {
+                "properties": {
+                    "index": {
+                        "type": "integer",
+                        "title": "Index",
+                        "description": "The index of the choice."
+                    },
+                    "message": {
+                        "$ref": "#/components/schemas/Message",
+                        "description": "The message object containing role and content."
+                    },
+                    "logprobs": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Logprobs",
+                        "description": "Log probabilities (if any)."
+                    },
+                    "finish_reason": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Finish Reason",
+                        "description": "The reason for finishing the response."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "index",
+                    "message"
+                ],
+                "title": "Choice",
+                "description": "Represents one of the possible choices returned by a language model response.\n\nAttributes:\n    index (int): The index of the choice in the list of returned completions.\n    message (Message): The generated message including role and content.\n    logprobs (Optional[str]): Log probabilities of tokens, if available.\n    finish_reason (Optional[str]): Reason why the model stopped generating this completion."
+            },
+            "ConsumptionResponse_List_dict__": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "additionalProperties": true,
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Data"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "ConsumptionResponse[List[dict]]"
+            },
+            "ConsumptionResponse_dict_": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Data"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "ConsumptionResponse[dict]"
+            },
+            "DeleteEmbeddingConfig": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id"
+                ],
+                "title": "DeleteEmbeddingConfig",
+                "description": "Represents the request structure for deleting an embedding configuration.\n\nAttributes:\n    id (int): The unique identifier for the embedding configuration to be deleted."
+            },
+            "DeleteLLMConfig": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id",
+                        "description": "Unique identifier of the LLM configuration to be deleted."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id"
+                ],
+                "title": "DeleteLLMConfig",
+                "description": "Request model for deleting an existing LLM configuration."
+            },
+            "EMBConfigResponse": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "platform": {
+                        "type": "string",
+                        "title": "Platform"
+                    },
+                    "model_provider": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Model Provider"
+                    },
+                    "config_json": {
+                        "additionalProperties": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "type": "object",
+                        "title": "Config Json",
+                        "default": {}
+                    },
+                    "is_active": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Active"
+                    },
+                    "created_by": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Created By"
+                    },
+                    "lm_type": {
+                        "type": "integer",
+                        "title": "Lm Type"
+                    },
+                    "created_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Created At"
+                    },
+                    "dimension": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Dimension"
+                    },
+                    "similarity_score": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Similarity Score"
+                    },
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "is_default": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Default"
+                    },
+                    "project_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Project Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "platform",
+                    "lm_type"
+                ],
+                "title": "EMBConfigResponse",
+                "description": "Response schema for an Embedding Model configuration.\n\nAttributes:\n    id (int): Unique identifier of the configuration.\n    platform (str): Platform name where the embedding model is hosted.\n    model_provider (Optional[str]): The embedding model provider.\n    config_json (Dict[str, str]): Dictionary containing configuration data.\n    is_active (Optional[bool]): Status of the configuration.\n    created_by (Optional[int]): ID of the user who created this config.\n    lm_type (int): Type identifier for the embedding model.\n    created_at (Optional[datetime]): Timestamp when the configuration was created.\n    dimension (Optional[int]): Vector dimension size used in the embedding model.\n    similarity_score (Optional[int]): Similarity threshold or score used for retrieval.\n    name (Optional[str]): Name of the configuration.\n    is_default (Optional[bool]): Whether this configuration is marked as default.\n    project_id (int): Project ID this configuration is associated with."
+            },
+            "EmbeddingConfig": {
+                "properties": {
+                    "platform": {
+                        "type": "string",
+                        "enum": [
+                            "Azure AI Studio",
+                            "OpenAI",
+                            "NVIDIA AI Enterprise",
+                            "Google Vertex AI",
+                            "Amazon Titan",
+                            "IBM Watsonx",
+                            "Hugging Face Inferencing",
+                            "Intel",
+                            "Self Hosted"
+                        ],
+                        "title": "Platform"
+                    },
+                    "config_name": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 50,
+                                "minLength": 3,
+                                "pattern": "^[a-zA-Z0-9_\\-\\s]+$"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Config Name",
+                        "description": "Name for the embedding model configuration."
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description",
+                        "description": "Description of the embedding model configuration."
+                    },
+                    "model_provider": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Model Provider",
+                        "description": "Provider of the embedding model"
+                    },
+                    "model_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Model Name",
+                        "description": "Name of the embedding model."
+                    },
+                    "end_point": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "End Point",
+                        "description": "API endpoint for the embedding model."
+                    },
+                    "api_key": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Api Key",
+                        "description": "API key used for authenticating requests to the model provider."
+                    },
+                    "deployment_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Deployment Name",
+                        "description": "Deployment name for hosted models"
+                    },
+                    "api_version": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Api Version",
+                        "description": "Version of the API to be used."
+                    },
+                    "api_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Api Type",
+                        "description": "Type of the API"
+                    },
+                    "region": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Region",
+                        "description": "Region where the model is hosted."
+                    },
+                    "access_key": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Access Key",
+                        "description": "Access key for providers requiring key-based authentication."
+                    },
+                    "secret_key": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Secret Key",
+                        "description": "Secret key for providers requiring key-based authentication."
+                    },
+                    "model_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Model Id",
+                        "description": "Unique identifier for the model in the provider's ecosystem."
+                    },
+                    "watsonx_project_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Watsonx Project Id",
+                        "description": "Project ID specific to IBM Watsonx platform."
+                    },
+                    "script_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Script Name",
+                        "description": "Name of the script used for custom embedding logic."
+                    },
+                    "packages": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Packages",
+                        "description": "List of packages to be installed for the custom script."
+                    },
+                    "script": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Script",
+                        "description": "Custom Python script used for generating embeddings."
+                    },
+                    "dimension": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Dimension",
+                        "description": "Dimensionality of the embedding vector."
+                    },
+                    "similarity_score": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Similarity Score",
+                        "description": "Similarity score threshold for embedding comparison."
+                    },
+                    "is_default": {
+                        "type": "boolean",
+                        "title": "Is Default",
+                        "description": "Flag to mark this configuration as the default."
+                    },
+                    "gemini_project_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Gemini Project Id",
+                        "description": "Project Id used by Google Gemini"
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Location",
+                        "description": "Location used by Google Gemini"
+                    },
+                    "lm_type": {
+                        "type": "integer",
+                        "const": 2,
+                        "title": "Lm Type",
+                        "description": "Type indicator for embedding model. Fixed value: 2.",
+                        "default": 2
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "platform",
+                    "is_default"
+                ],
+                "title": "EmbeddingConfig",
+                "description": "EmbeddingConfig\nThis class represents the configuration schema for various embedding platforms.\nIt validates the required fields based on the selected platform and ensures that all necessary\ninformation is provided for proper integration.\n\nAttributes:\n    platform (Literal):\n        The platform for which the configuration is defined.\n    Supported platforms include:\n        - \"NVIDIA Enterprise\"\n        - \"Azure Open AI\"\n        - \"Google Vertex AI\"\n        - \"Amazon Titan\"\n        - \"IBM Watsonx\"\n        - \"Hugging Face Inferencing\"\n        - \"Intel\"\n        - \"Self Hosted\"\n    config_name (str): The name of the configuration.\n    description (str): A description of the configuration.\n    model_provider (Optional[str]):\n        The provider of the model (used for \"Self Hosted\" platform).\n    model_name (Optional[str]): The name of the model.\n    end_point (Optional[str]): The endpoint URL for the platform.\n    api_key (Optional[str]): The API key for authentication.\n    deployment_name (Optional[str]): The deployment name (specific to Azure Open AI).\n    api_version (Optional[str]): The API version (specific to Azure Open AI).\n    api_type (Optional[str]): The API type (specific to Azure Open AI).\n    region (Optional[str]): The region for the platform (e.g., AWS, Azure).\n    access_key (Optional[str]): The access key for authentication (e.g., AWS).\n    secret_key (Optional[str]): The secret key for authentication (e.g., AWS).\n    model_id (Optional[str]): The model ID (e.g., Amazon Titan, IBM Watsonx).\n    watsonx_project_id (Optional[str]): The project ID for IBM Watsonx.\n    script_name (Optional[str]):\n        The name of the script (specific to \"Script Based\" provider).\n    packages (Optional[List[str]]):\n        The list of required packages (specific to \"Script Based\" provider).\n    script (Optional[str]):\n        The script content (specific to \"Script Based\" provider).\n    dimension (int): The dimensionality of the embeddings.\n    similarity_score (Optional[str]): The type of similarity score to use.\n    is_default (bool): Flag indicating if this is the default configuration.\n    capabilities (Optional[List[Capability]]): A list of capabilities associated with the model.\n    lm_type (int): The type of language model (embedding_model = 2). Defaults to 2.\n\nMethods:\n    validate_platform_specific_fields():\n        Raises:\n            ValueError: If any required fields are missing or invalid for the selected platform."
+            },
+            "EmbeddingData": {
+                "properties": {
+                    "embedding": {
+                        "items": {
+                            "type": "number"
+                        },
+                        "type": "array",
+                        "title": "Embedding",
+                        "description": "The embedding vector."
+                    },
+                    "index": {
+                        "type": "integer",
+                        "title": "Index",
+                        "description": "The index of the embedding."
+                    },
+                    "object": {
+                        "type": "string",
+                        "title": "Object",
+                        "description": "The type of the object (e.g., 'embedding')."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "embedding",
+                    "index",
+                    "object"
+                ],
+                "title": "EmbeddingData",
+                "description": "EmbeddingData is a Pydantic model that represents the structure of embedding data.\n\nAttributes:\n    embedding (List[float]):\n        The embedding vector, represented as a list of floating-point numbers.\n    index (int): The index of the embedding, typically used to identify its position.\n    object (str): The type of the object, such as 'embedding'."
+            },
+            "EmbeddingModelResponse": {
+                "properties": {
+                    "model": {
+                        "type": "string",
+                        "title": "Model",
+                        "description": "The name of the embedding model."
+                    },
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/EmbeddingData"
+                        },
+                        "type": "array",
+                        "title": "Data",
+                        "description": "A list of embedding data objects."
+                    },
+                    "object": {
+                        "type": "string",
+                        "title": "Object",
+                        "description": "The type of the object (e.g., 'list')."
+                    },
+                    "usage": {
+                        "$ref": "#/components/schemas/UsageDetails",
+                        "description": "Details about token usage."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "model",
+                    "data",
+                    "object",
+                    "usage"
+                ],
+                "title": "EmbeddingModelResponse",
+                "description": "EmbeddingResponse is a Pydantic model that represents the response structure\n    for embedding-related operations.\n\nAttributes:\n    model (str): The name of the embedding model.\n    data (List[EmbeddingData]): A list of embedding data objects.\n    object (str): The type of the object (e.g., 'list').\n    usage (UsageDetails): Details about token usage."
+            },
+            "EmbeddingRequest": {
+                "properties": {
+                    "model": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Model"
+                    },
+                    "input": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "items": {
+                                    "items": {
+                                        "type": "integer"
+                                    },
+                                    "type": "array"
+                                },
+                                "type": "array"
+                            }
+                        ],
+                        "title": "Input",
+                        "description": "provide list of string to create embedding"
+                    },
+                    "user": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/EmbeddingUserParams"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "model",
+                    "input",
+                    "user"
+                ],
+                "title": "EmbeddingRequest",
+                "description": "Request model for generating embeddings from input data.\n\nAttributes:\n    model (Optional[str]): Name of the embedding model to use.\n    input (str | List[str] | List[List[int]]): The input data to be embedded.\n    user (Optional[EmbeddingUserParams]): Optional user and project parameters."
+            },
+            "EmbeddingResponse": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id"
+                ],
+                "title": "EmbeddingResponse",
+                "description": "EmbeddingResponse is a Pydantic model that represents the response structure\nfor embedding-related operations.\n\nThis model is used to encapsulate the response data returned by the embedding\nconfiguration APIs. It ensures that the response adheres to a consistent structure\nand provides a unique identifier for the embedding configuration.\n\nAttributes:\n    id (int):\n        The unique identifier for the embedding configuration. This ID is used to\n        reference the specific embedding configuration that was created, updated,\n        or retrieved during the operation."
+            },
+            "EmbeddingUserParams": {
+                "properties": {
+                    "config_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "maximum": 2147483647,
+                                "minimum": 0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Config Id"
+                    }
+                },
+                "type": "object",
+                "title": "EmbeddingUserParams",
+                "description": "Parameters related to user and project configuration for embedding.\n\nAttributes:\n    config_id (Optional[StrictInt]): Unique identifier for the configuration.\n    project_id (Optional[StrictInt]): Unique identifier for the project."
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "HealthCheck": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "const": "OK",
+                        "title": "Status",
+                        "default": "OK"
+                    }
+                },
+                "type": "object",
+                "title": "HealthCheck",
+                "description": "Response model to validate and return when performing a health check."
+            },
+            "LLMCallRequest": {
+                "properties": {
+                    "prompt_id": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 1,
+                        "title": "Prompt Id",
+                        "description": "ID of the prompt to be executed."
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Data",
+                        "description": "Optional data to be used with the prompt.\n            In case of additional prompt data,\n            pass the value in `__global_var_prompt_data__` key.",
+                        "example": {
+                            "key": "value"
+                        }
+                    },
+                    "config_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "maximum": 2147483647,
+                                "minimum": 1
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Config Id",
+                        "description": "ID of the model configuration to be used."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prompt_id"
+                ],
+                "title": "LLMCallRequest",
+                "description": "LLMCallRequest defines the schema for a request to execute a prompt\nusing a Large Language Model (LLM).\n\nAttributes:\n    prompt_id (StrictInt): ID of the prompt to be executed. Must be between 1 and 2,147,483,647.\n    data (Optional[dict]): Optional data to be used with the prompt.\n        For additional prompt data, use the `__global_var_prompt_data__` key.\n            Example: {\"key\": \"value\"}.\n    config_id (Optional[StrictInt]): ID of the model configuration to be used.\n        Must be between 1 and 2,147,483,647.\n    llm_guard_enabled (Optional[bool]): Flag to enable or disable LLM guard checks.\n        Defaults to False."
+            },
+            "LLMConfig": {
+                "properties": {
+                    "platform": {
+                        "type": "string",
+                        "enum": [
+                            "Azure AI Studio",
+                            "OpenAI",
+                            "NVIDIA AI Enterprise",
+                            "Google Vertex AI",
+                            "AWS Sagemaker AI",
+                            "AWS Bedrock",
+                            "IBM Watsonx",
+                            "Hugging Face Inferencing",
+                            "Intel",
+                            "Anthropic",
+                            "Self Hosted"
+                        ],
+                        "title": "Platform"
+                    },
+                    "config_name": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "minLength": 3,
+                        "pattern": "^[a-zA-Z0-9_\\-\\s\\.]+$",
+                        "title": "Config Name",
+                        "description": "Configuration name for the model."
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description",
+                        "description": "Optional description for the configuration."
+                    },
+                    "model_provider": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Model Provider",
+                        "description": "Name of the model provider"
+                    },
+                    "model_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Model Name",
+                        "description": "Name of the LLM model."
+                    },
+                    "end_point": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "End Point",
+                        "description": "Endpoint URL for accessing the LLM service."
+                    },
+                    "api_key": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Api Key",
+                        "description": "API key used for authenticating with the model provider."
+                    },
+                    "deployment_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Deployment Name",
+                        "description": "Deployment name if the provider requires it"
+                    },
+                    "api_version": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Api Version",
+                        "description": "Version of the API being used."
+                    },
+                    "api_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Api Type",
+                        "description": "Type of API"
+                    },
+                    "region": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Region",
+                        "description": "Region of the deployment"
+                    },
+                    "access_key": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Access Key",
+                        "description": "Access key for providers that require it"
+                    },
+                    "secret_key": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Secret Key",
+                        "description": "Secret key for providers that require it."
+                    },
+                    "model_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Model Id",
+                        "description": "Unique model ID if needed for identification "
+                    },
+                    "watsonx_project_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Watsonx Project Id",
+                        "description": "Project ID for IBM Watsonx."
+                    },
+                    "oauth_endpoint": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Oauth Endpoint",
+                        "description": "OAuth endpoint for authentication."
+                    },
+                    "client_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Client Id",
+                        "description": "Client ID used in OAuth-based authentication."
+                    },
+                    "client_secret": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Client Secret",
+                        "description": "Client secret used in OAuth-based authentication."
+                    },
+                    "app_key": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "App Key",
+                        "description": "Application key, if required by the provider."
+                    },
+                    "script_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Script Name",
+                        "description": "Name of the script if using a script-based model deployment."
+                    },
+                    "packages": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Packages",
+                        "description": "List of Python packages required for the script-based deployment."
+                    },
+                    "script": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Script",
+                        "description": "Python script code used for custom model behavior."
+                    },
+                    "temperature": {
+                        "type": "number",
+                        "title": "Temperature",
+                        "description": "Temperature setting for response variability."
+                    },
+                    "input_token": {
+                        "type": "integer",
+                        "title": "Input Token",
+                        "description": "Maximum number of input tokens allowed."
+                    },
+                    "output_token": {
+                        "type": "integer",
+                        "title": "Output Token",
+                        "description": "Maximum number of output tokens allowed."
+                    },
+                    "is_default": {
+                        "type": "boolean",
+                        "title": "Is Default",
+                        "description": "Indicates whether this configuration is the default one."
+                    },
+                    "is_short_term": {
+                        "type": "boolean",
+                        "title": "Is Short Term",
+                        "description": "Indicates whether this configuration is for short term key"
+                    },
+                    "session_token": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Session Token",
+                        "description": "Session token for AWS Bedrock"
+                    },
+                    "capabilities": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/Capability"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Capabilities",
+                        "description": "List of capabilities supported by this model."
+                    },
+                    "gemini_project_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Gemini Project Id",
+                        "description": "Project Id used by Google Gemini"
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Location",
+                        "description": "Location used by Google Gemini"
+                    },
+                    "lm_type": {
+                        "type": "integer",
+                        "title": "Lm Type",
+                        "default": 1
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "platform",
+                    "config_name",
+                    "temperature",
+                    "input_token",
+                    "output_token",
+                    "is_default",
+                    "is_short_term"
+                ],
+                "title": "LLMConfig",
+                "description": "LLMConfig\nThis class represents the configuration schema for various Large Language Model (LLM) platforms.\nIt validates the required fields based on the selected platform and ensures that all necessary\ninformation is provided for proper integration.\nAttributes:\n    platform (Literal): The platform for which the configuration is defined.\n    Supported platforms include:\n        - \"Azure Open AI\"\n        - \"NVIDIA Enterprise\"\n        - \"Google Vertex AI\"\n        - \"AWS Sagemaker AI\"\n        - \"AWS Bedrock\"\n        - \"IBM Watsonx\"\n        - \"Hugging Face Inferencing\"\n        - \"Intel\"\n        - \"Self Hosted\"\n    config_name (str): The name of the configuration.\n    model_provider (Optional[str]): The provider of the model (used for \"Self Hosted\" platform).\n    model_name (Optional[str]): The name of the model.\n    end_point (Optional[str]): The endpoint URL for the platform.\n    api_key (Optional[str]): The API key for authentication.\n    deployment_name (Optional[str]): The deployment name (specific to Azure Open AI).\n    api_version (Optional[str]): The API version (specific to Azure Open AI).\n    api_type (Optional[str]): The API type (specific to Azure Open AI).\n    region (Optional[str]): The region for the platform (e.g., AWS, Azure).\n    access_key (Optional[str]): The access key for authentication (e.g., AWS).\n    secret_key (Optional[str]): The secret key for authentication (e.g., AWS).\n    model_id (Optional[str]): The model ID (e.g., IBM Watsonx, AWS Bedrock).\n    watsonx_project_id (Optional[str]): The project ID for IBM Watsonx.\n    oauth_endpoint (Optional[str]): The OAuth endpoint (specific to \"EntraId Secured\" provider).\n    client_id (Optional[str]): The client ID for OAuth authentication.\n    client_secret (Optional[str]): The client secret for OAuth authentication.\n    app_key (Optional[str]): The application key (specific to \"EntraId Secured\" provider).\n    script_name (Optional[str]): The name of the script (specific to \"Script Based\" provider).\n    packages (Optional[List[str]]):\n        The list of required packages (specific to \"Script Based\" provider).\n    script (Optional[str]): The script content (specific to \"Script Based\" provider).\n    temperature (float): The temperature parameter for the model.\n    input_token (int): The maximum number of input tokens.\n    output_token (int): The maximum number of output tokens.\nMethods:\n    validate_platform_specific_fields():\n        Raises:\n            ValueError: If any required fields are missing or invalid for the selected platform."
+            },
+            "Message": {
+                "properties": {
+                    "role": {
+                        "type": "string",
+                        "title": "Role",
+                        "description": "The role of the LLM (e.g., 'assistant')."
+                    },
+                    "content": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Content",
+                        "description": "The content of the message."
+                    },
+                    "tool_calls": {
+                        "anyOf": [
+                            {
+                                "items": {},
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Tool Calls"
+                    },
+                    "function_call": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Function Call",
+                        "description": "function call details, if any.",
+                        "examples": [
+                            null
+                        ]
+                    },
+                    "tool_call_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Tool Call Id",
+                        "description": "Unique identifier for the tool call, if applicable.",
+                        "examples": [
+                            null
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "role"
+                ],
+                "title": "Message",
+                "description": "Represents a message exchanged in a chat, including role, content, and optional tool/function\ncall metadata.\n\nAttributes:\n    role (str): The role of the LLM (e.g., 'assistant').\n    content (str | None): The actual content of the message.\n    tool_calls (Optional[list]): A list of tool call data, if any.\n    function_call (Optional[dict]): Details of any function call made within the message.\n    tool_call_id (Optional[str]): Identifier for the tool call, used to correlate tool usage."
+            },
+            "PackageRequest": {
+                "properties": {
+                    "packages": {
+                        "type": "string",
+                        "title": "Packages",
+                        "description": "Comma-separated package names to be installed."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "packages"
+                ],
+                "title": "PackageRequest",
+                "description": "Request model for installing packages."
+            },
+            "SpeechConfigRequest": {
+                "properties": {
+                    "config_name": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "minLength": 3,
+                        "pattern": "^[a-zA-Z0-9_\\-\\s]+$",
+                        "title": "Config Name",
+                        "description": "Name of the speech configuration."
+                    },
+                    "platform": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Platform",
+                        "description": "Platform or provider of the speech model (e.g., Azure, Google)."
+                    },
+                    "model_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Model Name",
+                        "description": "Name of the speech model to be used."
+                    },
+                    "end_point": {
+                        "type": "string",
+                        "minLength": 3,
+                        "title": "End Point",
+                        "description": "API endpoint for the speech model."
+                    },
+                    "api_key": {
+                        "type": "string",
+                        "minLength": 3,
+                        "title": "Api Key",
+                        "description": "API key for authenticating requests to the speech model."
+                    },
+                    "is_active": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Active",
+                        "description": "Indicates whether this configuration is active."
+                    },
+                    "is_default": {
+                        "type": "boolean",
+                        "title": "Is Default",
+                        "description": "Indicates whether this is the default speech configuration."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "is_default"
+                ],
+                "title": "SpeechConfigRequest",
+                "description": "Request model for creating or updating a speech configuration."
+            },
+            "Usage": {
+                "properties": {
+                    "prompt_tokens": {
+                        "type": "integer",
+                        "title": "Prompt Tokens",
+                        "description": "Number of tokens in the prompt."
+                    },
+                    "completion_tokens": {
+                        "type": "integer",
+                        "title": "Completion Tokens",
+                        "description": "Number of tokens in the completion."
+                    },
+                    "total_tokens": {
+                        "type": "integer",
+                        "title": "Total Tokens",
+                        "description": "Total number of tokens used."
+                    },
+                    "total_cost": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Total Cost",
+                        "default": 0
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prompt_tokens",
+                    "completion_tokens",
+                    "total_tokens"
+                ],
+                "title": "Usage",
+                "description": "Represents token usage statistics for a chat completion response.\n\nAttributes:\n    prompt_tokens (int): Number of tokens used in the input prompt.\n    completion_tokens (int): Number of tokens generated in the response.\n    total_tokens (int): Total number of tokens used (prompt + completion).\n    total_cost (Optional[float]): Estimated cost of the API call, if applicable."
+            },
+            "UsageDetails": {
+                "properties": {
+                    "completion_tokens": {
+                        "type": "integer",
+                        "title": "Completion Tokens",
+                        "description": "The number of completion tokens used."
+                    },
+                    "prompt_tokens": {
+                        "type": "integer",
+                        "title": "Prompt Tokens",
+                        "description": "The number of prompt tokens used."
+                    },
+                    "total_tokens": {
+                        "type": "integer",
+                        "title": "Total Tokens",
+                        "description": "The total number of tokens used."
+                    },
+                    "total_cost": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Total Cost",
+                        "description": "The total cost incurred for the request."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "completion_tokens",
+                    "prompt_tokens",
+                    "total_tokens"
+                ],
+                "title": "UsageDetails",
+                "description": "UsageDetails is a Pydantic model that represents the details of token usage\n    and associated costs.\n\nAttributes:\n    completion_tokens (int): The number of completion tokens used.\n    prompt_tokens (int): The number of prompt tokens used.\n    total_tokens (int): The total number of tokens used.\n    total_cost (Optional[float]): The total cost incurred for the request. Defaults to None."
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            },
+            "app__schema__llm_config_schema__LLMConfigResponse": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id",
+                        "description": "Unique identifier for the LLM configuration."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id"
+                ],
+                "title": "LLMConfigResponse",
+                "description": "Response model for returning basic LLM configuration information."
+            },
+            "app__schema__response_schema__BaseResponse[LLMConfigResponse]": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/app__schema__llm_config_schema__LLMConfigResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[LLMConfigResponse]"
+            },
+            "app__schema__response_schema__BaseResponse_LLMConfigResponse___2": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "enum": [
+                            true,
+                            false
+                        ],
+                        "title": "Status"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    },
+                    "data": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/app__schema__response_schema__LLMConfigResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "BaseResponse[LLMConfigResponse]"
+            },
+            "app__schema__response_schema__LLMConfigResponse": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "platform": {
+                        "type": "string",
+                        "title": "Platform"
+                    },
+                    "model_provider": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Model Provider"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "config_json": {
+                        "additionalProperties": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "type": "object",
+                        "title": "Config Json",
+                        "default": {}
+                    },
+                    "is_active": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Active"
+                    },
+                    "created_by": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Created By"
+                    },
+                    "lm_type": {
+                        "type": "integer",
+                        "title": "Lm Type"
+                    },
+                    "created_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Created At"
+                    },
+                    "input_token_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Input Token Count"
+                    },
+                    "output_token_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Output Token Count"
+                    },
+                    "temperature": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Temperature"
+                    },
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "is_default": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Default"
+                    },
+                    "project_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Project Id"
+                    },
+                    "capabilities": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/CapabilityItem"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Capabilities",
+                        "default": []
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "platform",
+                    "lm_type"
+                ],
+                "title": "LLMConfigResponse",
+                "description": "Response schema for a Language Model (LLM) configuration.\n\nAttributes:\n    id (int): Unique identifier of the configuration.\n    platform (str): Platform name where the LLM is hosted (e.g., Azure, AWS).\n    model_provider (Optional[str]): The model provider name (e.g., OpenAI, Hugging Face).\n    description (Optional[str]): Human-readable description of the configuration.\n    config_json (Dict[str, str]): Dictionary of config details (endpoint, keys, etc.).\n    is_active (Optional[bool]): Flag indicating if the configuration is active.\n    created_by (Optional[int]): User ID who created the configuration.\n    lm_type (int): Language model type identifier.\n    created_at (Optional[datetime]): Timestamp when the configuration was created.\n    input_token_count (Optional[int]): Number of tokens supported for input.\n    output_token_count (Optional[int]): Number of tokens supported for output.\n    temperature (Optional[float]): Sampling temperature for the LLM.\n    name (Optional[str]): Name of the configuration.\n    is_default (Optional[bool]): Indicates if this is the default configuration.\n    project_id (int): Project ID this configuration is associated with.\n    capabilities (Optional[List[CapabilityItem]]): List of model capabilities with scores."
+            },
+            "app__schema__response_schema__SpeechConfigResponse": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "platform": {
+                        "type": "string",
+                        "title": "Platform"
+                    },
+                    "model_provider": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Model Provider"
+                    },
+                    "config_json": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object",
+                        "title": "Config Json"
+                    },
+                    "created_by": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Created By"
+                    },
+                    "lm_type": {
+                        "type": "integer",
+                        "title": "Lm Type"
+                    },
+                    "created_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Created At"
+                    },
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "is_default": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Default"
+                    },
+                    "project_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Project Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "platform",
+                    "config_json",
+                    "lm_type"
+                ],
+                "title": "SpeechConfigResponse",
+                "description": "Response schema for a Speech Model configuration.\n\nAttributes:\n    id (int): Unique identifier for the configuration.\n    platform (str): Platform where the speech model is hosted.\n    model_provider (Optional[str]): Name of the model provider.\n    config_json (Dict[str, str]): Dictionary of config values such as API key, endpoint.\n    created_by (Optional[int]): ID of the user who created this configuration.\n    lm_type (int): Language model type identifier for speech.\n    created_at (Optional[datetime]): Creation timestamp of the configuration.\n    name (Optional[str]): Configuration name.\n    is_default (Optional[bool]): Flag indicating if this is the default configuration.\n    project_id (int): ID of the project this config belongs to."
+            },
+            "app__schema__speech_config_schema__SpeechConfigResponse": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id",
+                        "description": "Unique identifier of the speech configuration."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id"
+                ],
+                "title": "SpeechConfigResponse",
+                "description": "Response model containing the ID of a speech configuration."
+            }
+        },
+        "securitySchemes": {
+            "HTTPBearer": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    }
+}
