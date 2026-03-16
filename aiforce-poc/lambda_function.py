@@ -138,7 +138,8 @@ def test_prompt_via_pes(user_prompt, system_prompt, variables, lm_config_id=1):
                 "name": k,
                 "value": v,
                 "isFileInput": False,
-                "isRequired": True
+                "isRequired": True,
+                "filename": ""  # Schema expects this key even when empty
             })
 
     payload = {
