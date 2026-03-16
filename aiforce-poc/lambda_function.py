@@ -312,9 +312,12 @@ def lambda_handler(event, context):
 
     Event format:
     {
-        "prompt_id": 123,
-        "variables": {"COMPANY": "TechCorp", "QUESTION": "How do I reset my password?"},
-        "security_group": "poc-security-group"    (optional, defaults to env var)
+        "mode": "standard" | "test_prompt",  (defaults to standard)
+        "prompt_id": 123,                     (required for standard mode)
+        "user_prompt": "Hello {{NAME}}",      (required for test_prompt mode)
+        "system_prompt": "You are AI...",     (optional for test_prompt mode)
+        "variables": {"COMPANY": "TechCorp"},
+        "security_group": "poc-security-group"
     }
     """
     print("=" * 60)
@@ -322,31 +325,43 @@ def lambda_handler(event, context):
     print("=" * 60)
 
     # Parse input
-    prompt_id = event.get("prompt_id")
+    mode = event.get("mode", "standard")
     variables = event.get("variables", {})
     security_group = event.get("security_group", SECURITY_GROUP)
     session_id = f"poc-session-{uuid.uuid4().hex[:8]}"
 
-    if not prompt_id:
-        return {"statusCode": 400, "body": json.dumps({"error": "prompt_id is required"})}
+    # Input validation
+    if mode == "standard" and not event.get("prompt_id"):
+        return {"statusCode": 400, "body": json.dumps({"error": "prompt_id is required for standard mode"})}
+    if mode == "test_prompt" and not event.get("user_prompt"):
+        return {"statusCode": 400, "body": json.dumps({"error": "user_prompt is required for test_prompt mode"})}
 
     if not AUTH_TOKEN:
         return {"statusCode": 400, "body": json.dumps({"error": "AIFORCE_AUTH_TOKEN env var not set"})}
 
     result = {
         "timestamp": datetime.utcnow().isoformat() + "Z",
-        "prompt_id": prompt_id,
+        "mode": mode,
         "session_id": session_id,
     }
 
-    # ── Step 1: Get prompt from PES ──────────────────────────────
-    prompt_data = get_prompt(prompt_id)
-    if not prompt_data:
-        return {"statusCode": 404, "body": json.dumps({"error": f"Prompt {prompt_id} not found"})}
+    # ── Step 1: Get or Build Prompt ──────────────────────────────
+    if mode == "standard":
+        prompt_id = event["prompt_id"]
+        result["prompt_id"] = prompt_id
+        prompt_data = get_prompt(prompt_id)
+        if not prompt_data:
+            return {"statusCode": 404, "body": json.dumps({"error": f"Prompt {prompt_id} not found"})}
 
-    prompt_name = prompt_data.get("name", f"prompt_{prompt_id}")
-    user_prompt_template = prompt_data.get("user_prompt", "")
-    system_prompt = prompt_data.get("system_prompt", "")
+        prompt_name = prompt_data.get("name", f"prompt_{prompt_id}")
+        user_prompt_template = prompt_data.get("user_prompt", "")
+        system_prompt = prompt_data.get("system_prompt", "")
+    else:
+        # test_prompt mode
+        prompt_name = "dynamic_test_prompt"
+        user_prompt_template = event["user_prompt"]
+        system_prompt = event.get("system_prompt", "")
+
     result["prompt_name"] = prompt_name
 
     # ── Step 2: Substitute variables ─────────────────────────────
@@ -370,15 +385,24 @@ def lambda_handler(event, context):
     # Use redacted text if available
     final_prompt = input_scan.get("sanitized_text", resolved_prompt) if input_scan.get("is_redacted") else resolved_prompt
 
-    # ── Step 4: Call Bedrock ─────────────────────────────────────
-    bedrock_result = call_bedrock(final_prompt, system_prompt)
-    result["bedrock"] = bedrock_result
-
-    if not bedrock_result.get("success"):
-        result["response"] = f"Bedrock error: {bedrock_result.get('error')}"
-        return {"statusCode": 500, "body": json.dumps(result, default=str)}
-
-    llm_response = bedrock_result["response"]
+    # ── Step 4: Call LLM (Bedrock OR PES Test) ───────────────────
+    if mode == "standard":
+        bedrock_result = call_bedrock(final_prompt, system_prompt)
+        result["bedrock"] = bedrock_result
+        if not bedrock_result.get("success"):
+            result["response"] = f"Bedrock error: {bedrock_result.get('error')}"
+            return {"statusCode": 500, "body": json.dumps(result, default=str)}
+        llm_response = bedrock_result["response"]
+    else:
+        # For test_prompt, PES calls the LLM configuration defined by lm_config_id
+        lm_config_id = event.get("lm_config_id", 1)  # allow override
+        test_result = test_prompt_via_pes(final_prompt, system_prompt, variables, lm_config_id)
+        result["pes_test"] = test_result
+        if "error" in test_result:
+            result["response"] = f"PES test error: {test_result.get('error')}"
+            return {"statusCode": 500, "body": json.dumps(result, default=str)}
+        llm_response = test_result.get("response", str(test_result)) # PES response schema varies
+        bedrock_result = {} # Mock bedrock result for downstream trace logging
 
     # ── Step 5: Scan output via SGS ──────────────────────────────
     output_scan = scan_output(prompt_name, llm_response, final_prompt, security_group)
@@ -403,17 +427,18 @@ def lambda_handler(event, context):
         log_llm_call(trace_id, final_prompt, llm_response, bedrock_result)
 
     # -- Step 8: Get G3S consumption (cost tracking) ---------------
-    g3s_consumption = get_cost_from_g3s()
-    result["cost"] = {
-        "this_call": {
-            "input_tokens": bedrock_result.get("input_tokens", 0),
-            "output_tokens": bedrock_result.get("output_tokens", 0),
-            "total_tokens": bedrock_result.get("total_tokens", 0),
-            "total_cost_usd": bedrock_result.get("total_cost", 0),
-            "model": BEDROCK_MODEL_ID,
-        },
-        "g3s_platform_consumption": g3s_consumption,
-    }
+    if mode == "standard":
+        g3s_consumption = get_cost_from_g3s()
+        result["cost"] = {
+            "this_call": {
+                "input_tokens": bedrock_result.get("input_tokens", 0),
+                "output_tokens": bedrock_result.get("output_tokens", 0),
+                "total_tokens": bedrock_result.get("total_tokens", 0),
+                "total_cost_usd": bedrock_result.get("total_cost", 0),
+                "model": BEDROCK_MODEL_ID,
+            },
+            "g3s_platform_consumption": g3s_consumption,
+        }
 
     # -- Step 9: Add trace events (observability) ------------------
     if trace_id:
