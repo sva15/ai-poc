@@ -119,9 +119,30 @@ curl -k -X POST "https://54.91.159.104/sgs/security-groups/register" \
 
 ---
 
-## Step 7: Configure Scanners on the Security Group
+## Step 7: List Available Scanners
 
-> **Important**: Every scanner must include a `description` field and all scanners must be listed (set unused ones to `enabled: false`).
+**Run this first** to see which scanners are actually installed on your platform:
+
+```bash
+curl -k -X GET "https://54.91.159.104/sgs/security-groups/master/scanners" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Accept: application/json"
+```
+
+Look at the response — note the **exact scanner names** under `input_safety_guards` and `output_safety_guards`. You can only use scanner names that appear in this list.
+
+> **Common scanner names** (may vary by platform):
+> - Input: `Detect PII`, `Detect Prompt Injection`, `Detect Toxicity`
+> - Output: `Detect PII` or `Detect Sensitive Data`, `Detect Toxicity`
+
+---
+
+## Step 8: Configure Scanners on the Security Group
+
+> **Important**: Use only the scanner names that appeared in Step 7.
+> If a scanner name gives an "unsupported scanner" error, remove it from the JSON and check the master scanners list.
+
+**Option A** — If your platform supports `Detect PII`:
 
 ```bash
 curl -k -X PUT "https://54.91.159.104/sgs/security-groups/poc-security-group/config" \
@@ -140,49 +161,14 @@ curl -k -X PUT "https://54.91.159.104/sgs/security-groups/poc-security-group/con
           }
         },
         "Detect Prompt Injection": {
-          "description": "Analyzes the prompt for patterns indicative of attempts to override LLM instructions.",
+          "description": "Detects prompt injection attempts.",
           "enabled": true,
           "config": { "threshold": 0.7 }
         },
         "Detect Toxicity": {
-          "description": "Detects offensive or harmful language in the input prompt.",
+          "description": "Detects offensive or harmful language.",
           "enabled": true,
           "config": { "threshold": 0.8 }
-        },
-        "Detect Banned Substrings": {
-          "description": "Ban Substrings scanner.",
-          "enabled": false,
-          "config": { "substrings": [], "redact": false, "case_sensitive": false, "contains_all": false }
-        },
-        "Detect Banned Topics": {
-          "description": "Restrict specific topics.",
-          "enabled": false,
-          "config": { "topics": [], "threshold": 0.85 }
-        },
-        "Detect Code Language": {
-          "description": "Detects code snippets.",
-          "enabled": false,
-          "config": { "is_blocked": false, "languages": [], "threshold": 0.85 }
-        },
-        "Detect Competitors": {
-          "description": "Competitor detection.",
-          "enabled": false,
-          "config": { "competitors": [], "redact": false, "threshold": 0.8 }
-        },
-        "Detect Secrets": {
-          "description": "Scans for API keys and secrets.",
-          "enabled": false,
-          "config": { "redact": false, "redact_mode": "all", "secrets": [] }
-        },
-        "Regex-based Sanitization": {
-          "description": "Regex sanitization.",
-          "enabled": false,
-          "config": { "is_blocked": false, "patterns": [], "redact": false }
-        },
-        "Token Limit Enforcement": {
-          "description": "Token count limit.",
-          "enabled": false,
-          "config": { "limit": 4096 }
         }
       },
       "output_safety_guards": {
@@ -199,60 +185,19 @@ curl -k -X PUT "https://54.91.159.104/sgs/security-groups/poc-security-group/con
           "description": "Detects toxic language in output.",
           "enabled": true,
           "config": { "threshold": 0.8 }
-        },
-        "Detect Banned Substrings": {
-          "description": "Ban Substrings scanner.",
-          "enabled": false,
-          "config": { "substrings": [], "redact": false, "case_sensitive": false }
-        },
-        "Detect Banned Topics": {
-          "description": "Restrict specific topics.",
-          "enabled": false,
-          "config": { "topics": [], "threshold": 0.85 }
-        },
-        "Detect Bias": {
-          "description": "Bias scanner.",
-          "enabled": false,
-          "config": { "threshold": 0.8 }
-        },
-        "Detect Code Language": {
-          "description": "Detects code snippets.",
-          "enabled": false,
-          "config": { "is_blocked": false, "languages": [], "threshold": 0.85 }
-        },
-        "Detect Competitors": {
-          "description": "Competitor detection.",
-          "enabled": false,
-          "config": { "competitors": [], "redact": false, "threshold": 0.8 }
-        },
-        "Detect Malicious URLs": {
-          "description": "Detect malicious URLs.",
-          "enabled": false,
-          "config": { "threshold": 0.8 }
-        },
-        "Detect Relevance": {
-          "description": "Relevance scanner.",
-          "enabled": false,
-          "config": { "threshold": 0.3 }
-        },
-        "Detect Sensitive Data": {
-          "description": "Sensitive data detection.",
-          "enabled": false,
-          "config": { "entity_types": [], "redact": false, "threshold": 0.8 }
-        },
-        "Regex-based Sanitization": {
-          "description": "Regex sanitization.",
-          "enabled": false,
-          "config": { "is_blocked": false, "patterns": [], "redact": false }
         }
       }
     }
   }'
 ```
 
+**Option B** — If `Detect PII` gives an error, try `Detect Sensitive Data` instead:
+
+Replace `"Detect PII"` with `"Detect Sensitive Data"` in both input and output sections above.
+
 ---
 
-## Step 8: Verify Security Group Configuration
+## Step 9: Verify Security Group Configuration
 
 ```bash
 # List all groups
@@ -278,3 +223,4 @@ After completing the steps above, note down these values — you'll need them fo
 | Security Group Name | `poc-security-group` (created in Step 6) |
 
 These IDs will be used in the Lambda test events (see `03-testing-guide.md`).
+

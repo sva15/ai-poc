@@ -60,8 +60,12 @@ def api_call(method, path, body=None, content_type="application/json"):
 
     try:
         with urllib.request.urlopen(req, timeout=30, context=SSL_CTX) as resp:
-            resp_body = resp.read().decode("utf-8")
-            return {"success": True, "status": resp.getcode(), "data": json.loads(resp_body) if resp_body else {}}
+            resp_body = resp.read().decode("utf-8").strip()
+            try:
+                parsed = json.loads(resp_body) if resp_body else {}
+            except json.JSONDecodeError:
+                parsed = resp_body  # return raw string if not valid JSON
+            return {"success": True, "status": resp.getcode(), "data": parsed}
     except urllib.error.HTTPError as e:
         err_body = e.read().decode("utf-8")
         try:
@@ -205,8 +209,8 @@ def scan_output(prompt_name, output_text, input_prompt, security_group):
 def create_trace(trace_name, input_prompt, session_id):
     """Step 6: Create a trace in GCS for observability."""
     print(f"[GCS] Creating trace: {trace_name}")
-    result = api_call("POST", "/logs/trace/create", body={
-        "input": input_prompt,
+    result = api_call("POST", "/gcs/logs/trace/create", body={
+        "input": input_prompt[:2000],
         "username": "poc-user",
         "session_id": session_id,
         "trace_name": trace_name,
@@ -226,7 +230,7 @@ def create_trace(trace_name, input_prompt, session_id):
 def log_llm_call(trace_id, prompt, output, bedrock_result):
     """Step 7: Log the LLM call details in the GCS trace."""
     print(f"[GCS] Logging LLM call to trace: {trace_id}")
-    result = api_call("POST", "/logs/trace/llm_call", body={
+    result = api_call("POST", "/gcs/logs/trace/llm_call", body={
         "trace_id": trace_id,
         "type": "LLM Call",
         "model": bedrock_result.get("model", BEDROCK_MODEL_ID),
