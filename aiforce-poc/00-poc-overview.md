@@ -9,7 +9,7 @@ A **single Lambda function** that demonstrates the full AIForce platform integra
 ## Architecture Flow
 
 ```
-User Input (mode: "standard" or "test_prompt")
+User Input (prompt_id + variables)
     |
     v
 [1] PES: Get Prompt --- Retrieve managed prompt template by ID
@@ -22,12 +22,7 @@ User Input (mode: "standard" or "test_prompt")
     |-- UNSAFE -> Block request, return error
     |
     v  SAFE
-    |──── MODE: standard ────┐               ┌──── MODE: test_prompt ────┐
-    |                        |               |                           |
-[4] Bedrock: Call LLM      [8] G3S Cost  OR  [4] PES: test_prompt API    |
-    | (via boto3)            |               | (Calls LLM internally)    |
-    v                        v               v                           v
-    └────────────────────────┴───────────────┴───────────────────────────┘
+[4] Bedrock: Call LLM --- Invoke Claude/Titan via boto3
     |
     v
 [5] SGS: Scan Output --- Check LLM response for PII, toxicity
@@ -118,29 +113,14 @@ All steps use `curl` commands documented in `01-prerequisites.md`.
 
 ## Lambda Input/Output
 
-### Input Event (Standard Mode)
+### Input Event
 ```json
 {
-  "mode": "standard",
   "prompt_id": 3,
   "variables": {
     "COMPANY": "TechCorp",
     "QUESTION": "How do I reset my password?"
   },
-  "security_group": "poc-security-group"
-}
-```
-
-### Input Event (Dynamic Test Mode)
-```json
-{
-  "mode": "test_prompt",
-  "user_prompt": "Write a short poem about {{TOPIC}}",
-  "system_prompt": "You are a poet.",
-  "variables": {
-    "TOPIC": "cybersecurity"
-  },
-  "lm_config_id": 1,
   "security_group": "poc-security-group"
 }
 ```
@@ -194,7 +174,6 @@ All steps use `curl` commands documented in `01-prerequisites.md`.
 | 4 | Prompt injection | Negative | Injection detection (Bedrock skipped) |
 | 5 | PII in output | Negative | Output PII screening |
 | 6 | Consistency check | Positive | Verifies flow works repeatedly |
-| 7 | Dynamic prompt testing | Positive | Tests `test_prompt` mode without saving a prompt |
 
 See `03-testing-guide.md` for exact JSON test events.
 

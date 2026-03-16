@@ -18,13 +18,12 @@ All tests are run from the **AWS Lambda Console → Test tab**.
 
 ## Test Scenarios
 
-### Scenario 1: ✅ Safe Question (Positive, Standard Mode)
+### Scenario 1: ✅ Safe Question (Positive)
 
-A clean, safe customer support question using a saved prompt — should pass all scans.
+A clean, safe customer support question — should pass all scans.
 
 ```json
 {
-  "mode": "standard",
   "prompt_id": PROMPT_A_ID,
   "variables": {
     "COMPANY": "TechCorp",
@@ -147,32 +146,6 @@ Another safe question to verify the flow works consistently.
 
 ---
 
-### Scenario 7: ✅ Dynamic Prompt Testing (Positive, Test Mode)
-
-Test a prompt that hasn't been saved to PES yet. This uses PES `test_prompt` instead of Bedrock, but still runs through SGS input/output scans and creates GCS traces.
-
-```json
-{
-  "mode": "test_prompt",
-  "user_prompt": "Write a short poem about {{TOPIC}}",
-  "system_prompt": "You are a creative poet.",
-  "variables": {
-    "TOPIC": "cybersecurity"
-  },
-  "lm_config_id": 1,
-  "security_group": "poc-security-group"
-}
-```
-
-**Expected Result:**
-- `input_scan.is_safe` = `true`
-- `pes_test` returns a response (from the model defined by `lm_config_id`)
-- `output_scan.is_safe` = `true`
-- `trace_id` is created with tracing events
-- Note: Bedrock cost tracing is skipped in this mode
-
----
-
 ## Understanding the Response
 
 The Lambda returns a JSON response with these key sections:
@@ -236,7 +209,6 @@ The Lambda returns a JSON response with these key sections:
 | 4. Prompt injection | ❌ | ❌ | — | Injection blocking |
 | 5. PII in output | ✅ | ✅ | ✅/redacted | Output PII screening |
 | 6. Another safe Q | ✅ | ✅ | ✅ | Consistency check |
-| 7. Dynamic Test | ✅ | (PES Test used) | ✅ | Tests unsaved prompts |
 
 ---
 

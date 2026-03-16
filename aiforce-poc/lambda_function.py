@@ -126,42 +126,6 @@ def scan_input(prompt_name, input_prompt, variables, security_group):
         return {"is_safe": True, "scan_error": result.get("error")}
 
 
-def test_prompt_via_pes(user_prompt, system_prompt, variables, lm_config_id=1):
-    """Test a prompt dynamically targeting PES /test_prompt without saving it."""
-    print(f"[PES] Testing prompt dynamically...")
-    
-    # PES test_prompt expects variables as a list of objects, not a simple dict
-    formatted_vars = []
-    if variables:
-        for k, v in variables.items():
-            formatted_vars.append({
-                "name": k,
-                "value": v,
-                "isFileInput": False,
-                "isRequired": True,
-                "filename": ""  # Schema expects this key even when empty
-            })
-
-    payload = {
-        "user_prompt": user_prompt,
-        "system_prompt": system_prompt or "",
-        "varriables": json.dumps(formatted_vars),
-        "lm_config_id": lm_config_id,
-        "promptId": 0,  # 0 indicates unsaved
-    }
-    result = api_call("POST", "/pes/prompt_studio/test_prompt", body=payload, content_type="application/x-www-form-urlencoded")
-    if result["success"]:
-        data = result["data"]
-        # Response might be nested data
-        if isinstance(data, dict):
-            data = data.get("data", data)
-        print(f"[PES] ✅ Prompt test execution complete")
-        return data
-    else:
-        print(f"[PES] ⚠️ Prompt test failed: {result.get('error')}")
-        return {"error": result.get("error")}
-
-
 def call_bedrock(user_prompt, system_prompt=""):
     """Step 4: Call Bedrock directly via boto3."""
     print(f"[BEDROCK] Calling model: {BEDROCK_MODEL_ID}")
@@ -339,6 +303,147 @@ def update_trace_output(trace_id, final_output):
     return result.get("success", False)
 
 
+# ─── Dynamic Prompt Handler (no PES) ────────────────────────────────
+
+def dynamic_prompt_handler(event):
+    """
+    Test prompts dynamically without saving to PES.
+    Runs: SGS input scan -> Bedrock -> SGS output scan -> GCS tracing -> G3S cost.
+
+    Event format:
+    {
+        "mode": "dynamic",
+        "prompt_name": "my-test",
+        "user_prompt": "You are a helpful assistant for {{COMPANY}}. Customer asks: {{QUESTION}}",
+        "system_prompt": "Be concise and professional.",
+        "variables": {"COMPANY": "TechCorp", "QUESTION": "How do I reset my password?"},
+        "security_group": "poc-security-group"
+    }
+    """
+    print("=" * 60)
+    print("  AIForce POC — Dynamic Prompt Testing (No PES)")
+    print("=" * 60)
+
+    # Parse input
+    prompt_name = event.get("prompt_name", "dynamic-test")
+    user_prompt_template = event.get("user_prompt", "")
+    system_prompt = event.get("system_prompt", "")
+    variables = event.get("variables", {})
+    security_group = event.get("security_group", SECURITY_GROUP)
+    session_id = f"poc-dynamic-{uuid.uuid4().hex[:8]}"
+
+    if not user_prompt_template:
+        return {"statusCode": 400, "body": json.dumps({"error": "user_prompt is required for dynamic mode"})}
+
+    if not AUTH_TOKEN:
+        return {"statusCode": 400, "body": json.dumps({"error": "AIFORCE_AUTH_TOKEN env var not set"})}
+
+    result = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "mode": "dynamic",
+        "prompt_name": prompt_name,
+        "session_id": session_id,
+    }
+
+    # -- Step 1: Substitute variables ---------------------------------
+    resolved_prompt = substitute_variables(user_prompt_template, variables)
+    result["resolved_prompt"] = resolved_prompt
+
+    # -- Step 2: Scan input via SGS -----------------------------------
+    input_scan = scan_input(prompt_name, user_prompt_template, variables, security_group)
+    result["input_scan"] = {
+        "is_safe": input_scan.get("is_safe", True),
+        "is_redacted": input_scan.get("is_redacted", False),
+    }
+
+    if not input_scan.get("is_safe", True):
+        print("[FLOW] Input flagged as UNSAFE -- skipping Bedrock call")
+        result["response"] = "Request blocked -- input failed safety scan."
+        result["bedrock_skipped"] = True
+        return {"statusCode": 200, "body": json.dumps(result, default=str)}
+
+    final_prompt = input_scan.get("sanitized_text", resolved_prompt) if input_scan.get("is_redacted") else resolved_prompt
+
+    # -- Step 3: Call Bedrock -----------------------------------------
+    bedrock_result = call_bedrock(final_prompt, system_prompt)
+    result["bedrock"] = bedrock_result
+
+    if not bedrock_result.get("success"):
+        result["response"] = f"Bedrock error: {bedrock_result.get('error')}"
+        return {"statusCode": 500, "body": json.dumps(result, default=str)}
+
+    llm_response = bedrock_result["response"]
+
+    # -- Step 4: Scan output via SGS ----------------------------------
+    output_scan = scan_output(prompt_name, llm_response, final_prompt, security_group)
+    result["output_scan"] = {
+        "is_safe": output_scan.get("is_safe", True),
+        "is_redacted": output_scan.get("is_redacted", False),
+    }
+
+    if output_scan.get("is_redacted") and output_scan.get("sanitized_text"):
+        llm_response = output_scan["sanitized_text"]
+        print("[FLOW] Output was redacted -- using sanitized version")
+
+    result["response"] = llm_response
+
+    # -- Step 5: Create trace in GCS ----------------------------------
+    trace_id = create_trace(f"dynamic-{prompt_name}", final_prompt, session_id)
+    result["trace_id"] = trace_id
+
+    # -- Step 6: Log LLM call in GCS ----------------------------------
+    if trace_id:
+        log_llm_call(trace_id, final_prompt, llm_response, bedrock_result)
+
+    # -- Step 7: Get G3S consumption ----------------------------------
+    g3s_consumption = get_cost_from_g3s()
+    result["cost"] = {
+        "this_call": {
+            "input_tokens": bedrock_result.get("input_tokens", 0),
+            "output_tokens": bedrock_result.get("output_tokens", 0),
+            "total_tokens": bedrock_result.get("total_tokens", 0),
+            "total_cost_usd": bedrock_result.get("total_cost", 0),
+            "model": BEDROCK_MODEL_ID,
+        },
+        "g3s_platform_consumption": g3s_consumption,
+    }
+
+    # -- Step 8: Add trace events -------------------------------------
+    if trace_id:
+        add_trace_event(trace_id, "input-scan",
+            "DEFAULT" if result["input_scan"]["is_safe"] else "WARNING",
+            f"Input scan: safe={result['input_scan']['is_safe']}, redacted={result['input_scan']['is_redacted']}",
+            {"scanner": "SGS", "is_safe": str(result["input_scan"]["is_safe"])})
+
+        add_trace_event(trace_id, "bedrock-call", "DEFAULT",
+            f"Bedrock: {bedrock_result.get('total_tokens', 0)} tokens, ${bedrock_result.get('total_cost', 0):.6f}",
+            {"model": BEDROCK_MODEL_ID, "tokens": str(bedrock_result.get("total_tokens", 0))})
+
+        add_trace_event(trace_id, "output-scan",
+            "DEFAULT" if result["output_scan"]["is_safe"] else "WARNING",
+            f"Output scan: safe={result['output_scan']['is_safe']}, redacted={result['output_scan']['is_redacted']}",
+            {"scanner": "SGS", "is_safe": str(result["output_scan"]["is_safe"])})
+
+    # -- Step 9: Update trace output ----------------------------------
+    if trace_id:
+        update_trace_output(trace_id, llm_response)
+        result["trace_output_updated"] = True
+
+    # -- Summary ------------------------------------------------------
+    print("\n" + "=" * 60)
+    print("  DYNAMIC PROMPT SUMMARY")
+    print("=" * 60)
+    print(f"  Prompt Name:  {prompt_name}")
+    print(f"  Input Safe:   {result['input_scan']['is_safe']}")
+    print(f"  Output Safe:  {result['output_scan']['is_safe']}")
+    print(f"  Tokens:       {bedrock_result.get('total_tokens', 0)}")
+    print(f"  Cost:         ${bedrock_result.get('total_cost', 0):.6f}")
+    print(f"  Trace ID:     {trace_id}")
+    print(f"  Response:     {llm_response[:100]}...")
+    print("=" * 60)
+
+    return {"statusCode": 200, "body": json.dumps(result, default=str)}
+
 
 # ─── Lambda Handler ──────────────────────────────────────────────────
 
@@ -346,58 +451,58 @@ def lambda_handler(event, context):
     """
     AWS Lambda entry point.
 
-    Event format:
+    Mode 1 - PES-based (default):
     {
-        "mode": "standard" | "test_prompt",  (defaults to standard)
-        "prompt_id": 123,                     (required for standard mode)
-        "user_prompt": "Hello {{NAME}}",      (required for test_prompt mode)
-        "system_prompt": "You are AI...",     (optional for test_prompt mode)
-        "variables": {"COMPANY": "TechCorp"},
+        "prompt_id": 123,
+        "variables": {"COMPANY": "TechCorp", "QUESTION": "How do I reset my password?"},
+        "security_group": "poc-security-group"
+    }
+
+    Mode 2 - Dynamic (no PES):
+    {
+        "mode": "dynamic",
+        "prompt_name": "my-test",
+        "user_prompt": "You are a helpful assistant for {{COMPANY}}...",
+        "system_prompt": "Be concise.",
+        "variables": {"COMPANY": "TechCorp", "QUESTION": "How do I reset my password?"},
         "security_group": "poc-security-group"
     }
     """
+    # Route to dynamic handler if mode is "dynamic"
+    if event.get("mode") == "dynamic":
+        return dynamic_prompt_handler(event)
+
+    # --- Existing PES-based flow below (unchanged) ---
     print("=" * 60)
     print("  AIForce POC — Lambda Execution Started")
     print("=" * 60)
 
     # Parse input
-    mode = event.get("mode", "standard")
+    prompt_id = event.get("prompt_id")
     variables = event.get("variables", {})
     security_group = event.get("security_group", SECURITY_GROUP)
     session_id = f"poc-session-{uuid.uuid4().hex[:8]}"
 
-    # Input validation
-    if mode == "standard" and not event.get("prompt_id"):
-        return {"statusCode": 400, "body": json.dumps({"error": "prompt_id is required for standard mode"})}
-    if mode == "test_prompt" and not event.get("user_prompt"):
-        return {"statusCode": 400, "body": json.dumps({"error": "user_prompt is required for test_prompt mode"})}
+    if not prompt_id:
+        return {"statusCode": 400, "body": json.dumps({"error": "prompt_id is required"})}
 
     if not AUTH_TOKEN:
         return {"statusCode": 400, "body": json.dumps({"error": "AIFORCE_AUTH_TOKEN env var not set"})}
 
     result = {
         "timestamp": datetime.utcnow().isoformat() + "Z",
-        "mode": mode,
+        "prompt_id": prompt_id,
         "session_id": session_id,
     }
 
-    # ── Step 1: Get or Build Prompt ──────────────────────────────
-    if mode == "standard":
-        prompt_id = event["prompt_id"]
-        result["prompt_id"] = prompt_id
-        prompt_data = get_prompt(prompt_id)
-        if not prompt_data:
-            return {"statusCode": 404, "body": json.dumps({"error": f"Prompt {prompt_id} not found"})}
+    # ── Step 1: Get prompt from PES ──────────────────────────────
+    prompt_data = get_prompt(prompt_id)
+    if not prompt_data:
+        return {"statusCode": 404, "body": json.dumps({"error": f"Prompt {prompt_id} not found"})}
 
-        prompt_name = prompt_data.get("name", f"prompt_{prompt_id}")
-        user_prompt_template = prompt_data.get("user_prompt", "")
-        system_prompt = prompt_data.get("system_prompt", "")
-    else:
-        # test_prompt mode
-        prompt_name = "dynamic_test_prompt"
-        user_prompt_template = event["user_prompt"]
-        system_prompt = event.get("system_prompt", "")
-
+    prompt_name = prompt_data.get("name", f"prompt_{prompt_id}")
+    user_prompt_template = prompt_data.get("user_prompt", "")
+    system_prompt = prompt_data.get("system_prompt", "")
     result["prompt_name"] = prompt_name
 
     # ── Step 2: Substitute variables ─────────────────────────────
@@ -421,24 +526,15 @@ def lambda_handler(event, context):
     # Use redacted text if available
     final_prompt = input_scan.get("sanitized_text", resolved_prompt) if input_scan.get("is_redacted") else resolved_prompt
 
-    # ── Step 4: Call LLM (Bedrock OR PES Test) ───────────────────
-    if mode == "standard":
-        bedrock_result = call_bedrock(final_prompt, system_prompt)
-        result["bedrock"] = bedrock_result
-        if not bedrock_result.get("success"):
-            result["response"] = f"Bedrock error: {bedrock_result.get('error')}"
-            return {"statusCode": 500, "body": json.dumps(result, default=str)}
-        llm_response = bedrock_result["response"]
-    else:
-        # For test_prompt, PES calls the LLM configuration defined by lm_config_id
-        lm_config_id = event.get("lm_config_id", 1)  # allow override
-        test_result = test_prompt_via_pes(final_prompt, system_prompt, variables, lm_config_id)
-        result["pes_test"] = test_result
-        if "error" in test_result:
-            result["response"] = f"PES test error: {test_result.get('error')}"
-            return {"statusCode": 500, "body": json.dumps(result, default=str)}
-        llm_response = test_result.get("response", str(test_result)) # PES response schema varies
-        bedrock_result = {} # Mock bedrock result for downstream trace logging
+    # ── Step 4: Call Bedrock ─────────────────────────────────────
+    bedrock_result = call_bedrock(final_prompt, system_prompt)
+    result["bedrock"] = bedrock_result
+
+    if not bedrock_result.get("success"):
+        result["response"] = f"Bedrock error: {bedrock_result.get('error')}"
+        return {"statusCode": 500, "body": json.dumps(result, default=str)}
+
+    llm_response = bedrock_result["response"]
 
     # ── Step 5: Scan output via SGS ──────────────────────────────
     output_scan = scan_output(prompt_name, llm_response, final_prompt, security_group)
@@ -463,18 +559,17 @@ def lambda_handler(event, context):
         log_llm_call(trace_id, final_prompt, llm_response, bedrock_result)
 
     # -- Step 8: Get G3S consumption (cost tracking) ---------------
-    if mode == "standard":
-        g3s_consumption = get_cost_from_g3s()
-        result["cost"] = {
-            "this_call": {
-                "input_tokens": bedrock_result.get("input_tokens", 0),
-                "output_tokens": bedrock_result.get("output_tokens", 0),
-                "total_tokens": bedrock_result.get("total_tokens", 0),
-                "total_cost_usd": bedrock_result.get("total_cost", 0),
-                "model": BEDROCK_MODEL_ID,
-            },
-            "g3s_platform_consumption": g3s_consumption,
-        }
+    g3s_consumption = get_cost_from_g3s()
+    result["cost"] = {
+        "this_call": {
+            "input_tokens": bedrock_result.get("input_tokens", 0),
+            "output_tokens": bedrock_result.get("output_tokens", 0),
+            "total_tokens": bedrock_result.get("total_tokens", 0),
+            "total_cost_usd": bedrock_result.get("total_cost", 0),
+            "model": BEDROCK_MODEL_ID,
+        },
+        "g3s_platform_consumption": g3s_consumption,
+    }
 
     # -- Step 9: Add trace events (observability) ------------------
     if trace_id:
@@ -515,3 +610,4 @@ def lambda_handler(event, context):
     print("=" * 60)
 
     return {"statusCode": 200, "body": json.dumps(result, default=str)}
+
