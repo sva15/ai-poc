@@ -80,7 +80,12 @@ def get_prompt(prompt_id):
     print(f"[PES] Getting prompt details for ID: {prompt_id}")
     result = api_call("GET", f"/pes/prompt_studio/get_prompt_details/{prompt_id}")
     if result["success"]:
-        data = result["data"].get("data", result["data"])
+        raw = result["data"]
+        # API may wrap in {"data": ...} — unwrap it
+        data = raw.get("data", raw) if isinstance(raw, dict) else raw
+        # data could be a list (e.g., [{...}]) or a dict
+        if isinstance(data, list):
+            data = data[0] if data else {}
         print(f"[PES] ✅ Retrieved prompt: {data.get('name', 'unknown')}")
         return data
     else:
@@ -248,7 +253,12 @@ def get_cost_from_g3s():
     print(f"[G3S] Fetching consumption data...")
     result = api_call("GET", "/g3s/model-consumption/consumption?date_filter=last_7_days")
     if result["success"]:
-        data = result["data"].get("data", result["data"])
+        raw = result["data"]
+        # Response could be a list or a dict with {"data": ...}
+        if isinstance(raw, dict):
+            data = raw.get("data", raw)
+        else:
+            data = raw  # already a list
         print(f"[G3S] ✅ Consumption data retrieved")
         return data
     else:
