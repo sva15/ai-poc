@@ -258,16 +258,84 @@ def get_cost_from_g3s():
     result = api_call("GET", "/g3s/model-consumption/consumption?date_filter=last_7_days")
     if result["success"]:
         raw = result["data"]
-        # Response could be a list or a dict with {"data": ...}
         if isinstance(raw, dict):
             data = raw.get("data", raw)
         else:
-            data = raw  # already a list
-        print(f"[G3S] ✅ Consumption data retrieved")
+            data = raw
+        print(f"[G3S] Consumption data retrieved")
         return data
     else:
-        print(f"[G3S] ⚠️ Consumption fetch failed: {result.get('error')}")
+        print(f"[G3S] Consumption fetch failed: {result.get('error')}")
         return None
+
+
+def add_trace_event(trace_id, event_name, level, status_message, metadata=None):
+    """Step 9: Add a custom event/span to the GCS trace."""
+    print(f"[GCS] Adding event '{event_name}' to trace: {trace_id}")
+    body = {
+        "trace_id": trace_id,
+        "name": event_name,
+        "level": level,
+        "status_message": status_message,
+        "environment": "Design",
+    }
+    if metadata:
+        body["metadata"] = metadata
+    result = api_call("POST", "/gcs/logs/trace/add_event", body=body)
+    if result["success"]:
+        print(f"[GCS] Event '{event_name}' added")
+    else:
+        print(f"[GCS] Event add failed: {result.get('error')}")
+    return result.get("success", False)
+
+
+def update_trace_output(trace_id, final_output):
+    """Step 10: Update the trace with the final LLM output."""
+    print(f"[GCS] Updating trace output: {trace_id}")
+    result = api_call("POST", "/gcs/logs/trace/update_output", body={
+        "trace_id": trace_id,
+        "output": final_output[:2000],
+    })
+    if result["success"]:
+        print(f"[GCS] Trace output updated")
+    else:
+        print(f"[GCS] Trace output update failed: {result.get('error')}")
+    return result.get("success", False)
+
+
+def validate_prompt_quality(prompt_name, input_prompt, system_prompt, variables, expected_output):
+    """Step 11: Validate prompt quality via GCS evaluators."""
+    print(f"[GCS] Validating prompt quality for: {prompt_name}")
+    result = api_call("POST", "/gcs/validate/prompt", body={
+        "prompt_name": prompt_name,
+        "input_prompt": input_prompt,
+        "system_prompt": system_prompt or "",
+        "description": f"POC validation for {prompt_name}",
+        "evaluation_platform": "g3s",
+        "execution_platform": "g3s",
+        "evaluation_model": "1",
+        "execution_model": "1",
+        "metric_datasets": [
+            {
+                "metric": "Toxicity Evaluator (Input)",
+                "dataset_items": [
+                    {
+                        "prompt_variable": variables if variables else {},
+                        "expected_output": expected_output or "A helpful response.",
+                    }
+                ],
+            }
+        ],
+    })
+    if result["success"]:
+        data = result["data"]
+        if isinstance(data, dict):
+            data = data.get("data", data)
+        print(f"[GCS] Prompt validation submitted")
+        return data
+    else:
+        print(f"[GCS] Prompt validation failed: {result.get('error')}")
+        return {"error": result.get("error")}
 
 
 # ─── Lambda Handler ──────────────────────────────────────────────────
@@ -368,7 +436,7 @@ def lambda_handler(event, context):
     if trace_id:
         log_llm_call(trace_id, final_prompt, llm_response, bedrock_result)
 
-    # ── Step 8: Get G3S consumption (cost tracking) ──────────────
+    # -- Step 8: Get G3S consumption (cost tracking) ---------------
     g3s_consumption = get_cost_from_g3s()
     result["cost"] = {
         "this_call": {
@@ -381,7 +449,37 @@ def lambda_handler(event, context):
         "g3s_platform_consumption": g3s_consumption,
     }
 
-    # ── Summary ──────────────────────────────────────────────────
+    # -- Step 9: Add trace events (observability) ------------------
+    if trace_id:
+        # Log input scan result as event
+        add_trace_event(trace_id, "input-scan",
+            "DEFAULT" if result["input_scan"]["is_safe"] else "WARNING",
+            f"Input scan: safe={result['input_scan']['is_safe']}, redacted={result['input_scan']['is_redacted']}",
+            {"scanner": "SGS", "is_safe": str(result["input_scan"]["is_safe"])})
+
+        # Log Bedrock call as event
+        add_trace_event(trace_id, "bedrock-call", "DEFAULT",
+            f"Bedrock: {bedrock_result.get('total_tokens', 0)} tokens, ${bedrock_result.get('total_cost', 0):.6f}, {bedrock_result.get('latency_ms', 0)}ms",
+            {"model": BEDROCK_MODEL_ID, "tokens": str(bedrock_result.get("total_tokens", 0))})
+
+        # Log output scan result as event
+        add_trace_event(trace_id, "output-scan",
+            "DEFAULT" if result["output_scan"]["is_safe"] else "WARNING",
+            f"Output scan: safe={result['output_scan']['is_safe']}, redacted={result['output_scan']['is_redacted']}",
+            {"scanner": "SGS", "is_safe": str(result["output_scan"]["is_safe"])})
+
+    # -- Step 10: Update trace with final output -------------------
+    if trace_id:
+        update_trace_output(trace_id, llm_response)
+        result["trace_output_updated"] = True
+
+    # -- Step 11: Validate prompt quality --------------------------
+    validation = validate_prompt_quality(
+        prompt_name, user_prompt_template, system_prompt,
+        variables, llm_response[:500])
+    result["prompt_validation"] = validation
+
+    # -- Summary ---------------------------------------------------
     print("\n" + "=" * 60)
     print("  EXECUTION SUMMARY")
     print("=" * 60)
@@ -391,6 +489,8 @@ def lambda_handler(event, context):
     print(f"  Tokens:       {bedrock_result.get('total_tokens', 0)}")
     print(f"  Cost:         ${bedrock_result.get('total_cost', 0):.6f}")
     print(f"  Trace ID:     {trace_id}")
+    print(f"  Trace Events: input-scan, bedrock-call, output-scan")
+    print(f"  Validation:   submitted")
     print(f"  Response:     {llm_response[:100]}...")
     print("=" * 60)
 
