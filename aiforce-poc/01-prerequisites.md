@@ -159,11 +159,6 @@ curl -k -X PUT "https://54.91.159.104/sgs/security-groups/poc-security-group/con
           "enabled": false,
           "config": { "topics": [], "threshold": 0.85 }
         },
-        "Detect Bias": {
-          "description": "Bias scanner.",
-          "enabled": false,
-          "config": { "threshold": 0.8 }
-        },
         "Detect Code Language": {
           "description": "Detects code snippets.",
           "enabled": false,
