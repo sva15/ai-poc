@@ -126,6 +126,29 @@ def scan_input(prompt_name, input_prompt, variables, security_group):
         return {"is_safe": True, "scan_error": result.get("error")}
 
 
+def test_prompt_via_pes(user_prompt, system_prompt, variables, lm_config_id=1):
+    """Test a prompt dynamically targeting PES /test_prompt without saving it."""
+    print(f"[PES] Testing prompt dynamically...")
+    payload = {
+        "user_prompt": user_prompt,
+        "system_prompt": system_prompt or "",
+        "varriables": json.dumps(variables) if variables else "{}",
+        "lm_config_id": lm_config_id,
+        "promptId": 0,  # 0 indicates unsaved
+    }
+    result = api_call("POST", "/pes/prompt_studio/test_prompt", body=payload, content_type="application/x-www-form-urlencoded")
+    if result["success"]:
+        data = result["data"]
+        # Response might be nested data
+        if isinstance(data, dict):
+            data = data.get("data", data)
+        print(f"[PES] ✅ Prompt test execution complete")
+        return data
+    else:
+        print(f"[PES] ⚠️ Prompt test failed: {result.get('error')}")
+        return {"error": result.get("error")}
+
+
 def call_bedrock(user_prompt, system_prompt=""):
     """Step 4: Call Bedrock directly via boto3."""
     print(f"[BEDROCK] Calling model: {BEDROCK_MODEL_ID}")
