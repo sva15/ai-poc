@@ -1,21 +1,23 @@
 """
 AIForce Shared HTTP Client
 Reusable client for all four AIForce foundational services (PES, G3S, SGS, GCS).
-Handles authentication, error handling, and request formatting.
+Handles authentication, error handling, and request formatting using ONLY native Python libraries (urllib).
 """
 
 import json
 import logging
 import time
-from urllib.parse import urljoin
-
-import requests
+import urllib.request
+import urllib.error
+import urllib.parse
+import ssl
+import uuid
 
 logger = logging.getLogger(__name__)
 
 
 class AIForceClient:
-    """Base HTTP client for AIForce REST APIs."""
+    """Base HTTP client for AIForce REST APIs (urllib architecture)."""
 
     def __init__(self, base_url: str, auth_token: str, timeout: int = 30, max_retries: int = 2):
         """
@@ -30,64 +32,91 @@ class AIForceClient:
         self.timeout = timeout
         self.max_retries = max_retries
 
-        self.session = requests.Session()
-        self.session.headers.update({
+        self.default_headers = {
             "Authorization": f"Bearer {auth_token}",
             "Accept": "application/json",
-        })
+        }
+        
         # Disable SSL warnings for self-signed certs (common in dev/POC)
-        self.session.verify = False
-        requests.packages.urllib3.disable_warnings(
-            requests.packages.urllib3.exceptions.InsecureRequestWarning
-        )
+        self.ssl_context = ssl.create_default_context()
+        self.ssl_context.check_hostname = False
+        self.ssl_context.verify_mode = ssl.CERT_NONE
 
-    def _build_url(self, path: str) -> str:
-        """Build full URL from path."""
-        return f"{self.base_url}{path}"
+    def _build_url(self, path: str, params: dict = None) -> str:
+        """Build full URL from path and query parameters."""
+        url = f"{self.base_url}{path}"
+        if params:
+            # Filter out None values
+            params = {k: v for k, v in params.items() if v is not None}
+            query_string = urllib.parse.urlencode(params)
+            url = f"{url}?{query_string}"
+        return url
 
-    def _request(self, method: str, path: str, **kwargs) -> dict:
+    def _request(self, method: str, path: str, params: dict = None, 
+                 data: bytes = None, headers: dict = None) -> dict:
         """
-        Make an HTTP request with retry logic.
+        Make an HTTP request with retry logic using built-in urllib.
 
         Returns:
-            dict with keys: success (bool), status_code (int), data (any), error (str|None)
+            dict with keys: success, status_code, data, error
         """
-        url = self._build_url(path)
+        url = self._build_url(path, params)
+        
+        req_headers = self.default_headers.copy()
+        if headers:
+            req_headers.update(headers)
+
+        request = urllib.request.Request(url, data=data, headers=req_headers, method=method.upper())
 
         for attempt in range(self.max_retries + 1):
             try:
                 logger.info(f"[{method.upper()}] {url} (attempt {attempt + 1})")
-                response = self.session.request(
-                    method=method,
-                    url=url,
-                    timeout=self.timeout,
-                    **kwargs
-                )
+                
+                with urllib.request.urlopen(request, timeout=self.timeout, context=self.ssl_context) as response:
+                    status_code = response.getcode()
+                    resp_body = response.read().decode('utf-8')
 
-                # Parse response
-                try:
-                    data = response.json()
-                except (json.JSONDecodeError, ValueError):
-                    data = response.text
+                    try:
+                        resp_data = json.loads(resp_body) if resp_body else None
+                    except json.JSONDecodeError:
+                        resp_data = resp_body
 
-                if response.ok:
                     return {
                         "success": True,
-                        "status_code": response.status_code,
-                        "data": data,
+                        "status_code": status_code,
+                        "data": resp_data,
                         "error": None
                     }
-                else:
-                    error_msg = data if isinstance(data, str) else json.dumps(data)
-                    logger.warning(f"HTTP {response.status_code}: {error_msg}")
-                    return {
-                        "success": False,
-                        "status_code": response.status_code,
-                        "data": data,
-                        "error": f"HTTP {response.status_code}: {error_msg}"
-                    }
 
-            except requests.exceptions.Timeout:
+            except urllib.error.HTTPError as e:
+                resp_body = e.read().decode('utf-8')
+                try:
+                    resp_data = json.loads(resp_body) if resp_body else None
+                except json.JSONDecodeError:
+                    resp_data = resp_body
+                    
+                error_msg = resp_data if isinstance(resp_data, str) else json.dumps(resp_data)
+                logger.warning(f"HTTP {e.code}: {error_msg}")
+                return {
+                    "success": False,
+                    "status_code": e.code,
+                    "data": resp_data,
+                    "error": f"HTTP {e.code}: {error_msg}"
+                }
+
+            except urllib.error.URLError as e:
+                logger.warning(f"Connection/Timeout URL error on attempt {attempt + 1}: {e.reason}")
+                if attempt < self.max_retries:
+                    time.sleep(2 ** attempt)
+                    continue
+                return {
+                    "success": False,
+                    "status_code": 0,
+                    "data": None,
+                    "error": f"Network Error: {str(e.reason)}"
+                }
+                
+            except TimeoutError:
                 logger.warning(f"Timeout on attempt {attempt + 1}")
                 if attempt < self.max_retries:
                     time.sleep(2 ** attempt)
@@ -97,18 +126,6 @@ class AIForceClient:
                     "status_code": 408,
                     "data": None,
                     "error": f"Request timed out after {self.timeout}s"
-                }
-
-            except requests.exceptions.ConnectionError as e:
-                logger.warning(f"Connection error on attempt {attempt + 1}: {e}")
-                if attempt < self.max_retries:
-                    time.sleep(2 ** attempt)
-                    continue
-                return {
-                    "success": False,
-                    "status_code": 0,
-                    "data": None,
-                    "error": f"Connection error: {str(e)}"
                 }
 
             except Exception as e:
@@ -130,20 +147,52 @@ class AIForceClient:
 
     def post_json(self, path: str, body: dict) -> dict:
         """HTTP POST with JSON body."""
-        return self._request("POST", path, json=body)
+        data = json.dumps(body).encode('utf-8')
+        headers = {"Content-Type": "application/json"}
+        return self._request("POST", path, data=data, headers=headers)
 
     def post_form(self, path: str, data: dict) -> dict:
         """HTTP POST with form-urlencoded body."""
+        form_data = urllib.parse.urlencode(data).encode('utf-8')
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        return self._request("POST", path, data=data, headers=headers)
+        return self._request("POST", path, data=form_data, headers=headers)
 
     def post_multipart(self, path: str, files: dict, data: dict = None) -> dict:
-        """HTTP POST with multipart/form-data (file upload)."""
-        return self._request("POST", path, files=files, data=data)
+        """HTTP POST with natively built multipart/form-data."""
+        boundary = uuid.uuid4().hex
+        headers = {"Content-Type": f"multipart/form-data; boundary={boundary}"}
+        
+        body = bytearray()
+        
+        # Add form fields
+        if data:
+            for key, value in data.items():
+                body.extend(f"--{boundary}\r\n".encode('utf-8'))
+                body.extend(f'Content-Disposition: form-data; name="{key}"\r\n\r\n'.encode('utf-8'))
+                body.extend(f"{value}\r\n".encode('utf-8'))
+                
+        # Add file fields 
+        for field_name, file_handle in files.items():
+            filename = getattr(file_handle, "name", "upload.csv").split("/")[-1]
+            file_content = file_handle.read()
+            if isinstance(file_content, str):
+                file_content = file_content.encode('utf-8')
+                
+            body.extend(f"--{boundary}\r\n".format(boundary).encode('utf-8'))
+            body.extend(f'Content-Disposition: form-data; name="{field_name}"; filename="{filename}"\r\n'.encode('utf-8'))
+            body.extend(b'Content-Type: application/octet-stream\r\n\r\n')
+            body.extend(file_content)
+            body.extend(b'\r\n')
+            
+        body.extend(f"--{boundary}--\r\n".encode('utf-8'))
+        
+        return self._request("POST", path, data=bytes(body), headers=headers)
 
     def put_json(self, path: str, body: dict, params: dict = None) -> dict:
         """HTTP PUT with JSON body."""
-        return self._request("PUT", path, json=body, params=params)
+        data = json.dumps(body).encode('utf-8')
+        headers = {"Content-Type": "application/json"}
+        return self._request("PUT", path, params=params, data=data, headers=headers)
 
     def delete(self, path: str, params: dict = None) -> dict:
         """HTTP DELETE request."""
@@ -152,6 +201,7 @@ class AIForceClient:
     def health_check(self, service_path: str = "/check_health") -> dict:
         """Check service health."""
         return self.get(service_path)
+
 
 
 class PESClient(AIForceClient):

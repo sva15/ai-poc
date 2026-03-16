@@ -9,7 +9,7 @@ This guide covers how to test your AIForce POC components, from running the loca
 The `orchestrator.py` has been adapted to run entirely within a single AWS Lambda function. This simulates a real-world flow from setup, configuration to prompt execution, and cost tracking.
 
 ### Prerequisites
-You must have deployed the `aiforce-poc-orchestrator` Lambda function as described in **Step 5** of the [Deployment Guide](06-Deployment-Guide.md), including setting the environment variables (`AIFORCE_AUTH_TOKEN`, `AWS_REGION`, etc.) and attaching a `requests` Lambda layer.
+You must have deployed the `aiforce-poc-orchestrator` Lambda function as described in **Step 5** of the [Deployment Guide](06-Deployment-Guide.md), including setting the environment variables (`AIFORCE_AUTH_TOKEN`, `AWS_REGION`, etc.).
 
 ### Running the Orchestrator
 
