@@ -129,10 +129,22 @@ def scan_input(prompt_name, input_prompt, variables, security_group):
 def test_prompt_via_pes(user_prompt, system_prompt, variables, lm_config_id=1):
     """Test a prompt dynamically targeting PES /test_prompt without saving it."""
     print(f"[PES] Testing prompt dynamically...")
+    
+    # PES test_prompt expects variables as a list of objects, not a simple dict
+    formatted_vars = []
+    if variables:
+        for k, v in variables.items():
+            formatted_vars.append({
+                "name": k,
+                "value": v,
+                "isFileInput": False,
+                "isRequired": True
+            })
+
     payload = {
         "user_prompt": user_prompt,
         "system_prompt": system_prompt or "",
-        "varriables": json.dumps(variables) if variables else "{}",
+        "varriables": json.dumps(formatted_vars),
         "lm_config_id": lm_config_id,
         "promptId": 0,  # 0 indicates unsaved
     }
