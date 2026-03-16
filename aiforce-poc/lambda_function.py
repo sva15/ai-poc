@@ -303,40 +303,6 @@ def update_trace_output(trace_id, final_output):
     return result.get("success", False)
 
 
-def validate_prompt_quality(prompt_name, input_prompt, system_prompt, variables, expected_output):
-    """Step 11: Validate prompt quality via GCS evaluators."""
-    print(f"[GCS] Validating prompt quality for: {prompt_name}")
-    result = api_call("POST", "/gcs/validate/prompt", body={
-        "prompt_name": prompt_name,
-        "input_prompt": input_prompt,
-        "system_prompt": system_prompt or "",
-        "description": f"POC validation for {prompt_name}",
-        "evaluation_platform": "g3s",
-        "execution_platform": "g3s",
-        "evaluation_model": "1",
-        "execution_model": "1",
-        "metric_datasets": [
-            {
-                "metric": "Toxicity Evaluator (Input)",
-                "dataset_items": [
-                    {
-                        "prompt_variable": variables if variables else {},
-                        "expected_output": expected_output or "A helpful response.",
-                    }
-                ],
-            }
-        ],
-    })
-    if result["success"]:
-        data = result["data"]
-        if isinstance(data, dict):
-            data = data.get("data", data)
-        print(f"[GCS] Prompt validation submitted")
-        return data
-    else:
-        print(f"[GCS] Prompt validation failed: {result.get('error')}")
-        return {"error": result.get("error")}
-
 
 # ─── Lambda Handler ──────────────────────────────────────────────────
 
@@ -473,12 +439,6 @@ def lambda_handler(event, context):
         update_trace_output(trace_id, llm_response)
         result["trace_output_updated"] = True
 
-    # -- Step 11: Validate prompt quality --------------------------
-    validation = validate_prompt_quality(
-        prompt_name, user_prompt_template, system_prompt,
-        variables, llm_response[:500])
-    result["prompt_validation"] = validation
-
     # -- Summary ---------------------------------------------------
     print("\n" + "=" * 60)
     print("  EXECUTION SUMMARY")
@@ -490,7 +450,6 @@ def lambda_handler(event, context):
     print(f"  Cost:         ${bedrock_result.get('total_cost', 0):.6f}")
     print(f"  Trace ID:     {trace_id}")
     print(f"  Trace Events: input-scan, bedrock-call, output-scan")
-    print(f"  Validation:   submitted")
     print(f"  Response:     {llm_response[:100]}...")
     print("=" * 60)
 

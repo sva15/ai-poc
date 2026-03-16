@@ -12,42 +12,40 @@ A **single Lambda function** that demonstrates the full AIForce platform integra
 User Input (prompt_id + variables)
     |
     v
-[1] PES: Get Prompt ─── Retrieve managed prompt template by ID
+[1] PES: Get Prompt --- Retrieve managed prompt template by ID
     |
-[2] Substitute Variables ─── Replace {{COMPANY}}, {{QUESTION}} etc.
+[2] Substitute Variables --- Replace {{COMPANY}}, {{QUESTION}} etc.
     |
     v
-[3] SGS: Scan Input ─── Check for PII, toxicity, prompt injection
+[3] SGS: Scan Input --- Check for PII, toxicity, prompt injection
     |
-    ├── UNSAFE → Block request, return error
+    |-- UNSAFE -> Block request, return error
     |
     v  SAFE
-[4] Bedrock: Call LLM ─── Invoke Claude/Titan via boto3
+[4] Bedrock: Call LLM --- Invoke Claude/Titan via boto3
     |
     v
-[5] SGS: Scan Output ─── Check LLM response for PII, toxicity
+[5] SGS: Scan Output --- Check LLM response for PII, toxicity
     |
     v
-[6] GCS: Create Trace ─── Start observability trace
+[6] GCS: Create Trace --- Start observability trace
     |
-[7] GCS: Log LLM Call ─── Record tokens, cost, latency
-    |
-    v
-[8] G3S: Get Cost ─── Fetch platform consumption data
-    |
-[9] GCS: Add Events ─── Log input-scan, bedrock-call, output-scan events
-    |
-[10] GCS: Update Output ─── Attach final response to trace
-    |
-[11] GCS: Validate Prompt ─── Run toxicity evaluation on prompt
+[7] GCS: Log LLM Call --- Record tokens, cost, latency
     |
     v
-Return: response + scan results + trace_id + cost + validation
+[8] G3S: Get Cost --- Fetch platform consumption data
+    |
+[9] GCS: Add Events --- Log input-scan, bedrock-call, output-scan events
+    |
+[10] GCS: Update Output --- Attach final response to trace
+    |
+    v
+Return: response + scan results + trace_id + cost
 ```
 
 ---
 
-## Services Used (9 endpoints across 4 services)
+## Services Used (8 endpoints across 4 services)
 
 | # | Service | Endpoint | Purpose |
 |---|---------|----------|---------|
@@ -58,8 +56,7 @@ Return: response + scan results + trace_id + cost + validation
 | 5 | **GCS** | `POST /gcs/logs/trace/llm_call` | Log LLM call (tokens, cost) |
 | 6 | **GCS** | `POST /gcs/logs/trace/add_event` | Add step events to trace |
 | 7 | **GCS** | `POST /gcs/logs/trace/update_output` | Update trace with final output |
-| 8 | **GCS** | `POST /gcs/validate/prompt` | Validate prompt quality |
-| 9 | **G3S** | `GET /g3s/model-consumption/consumption` | Platform cost tracking |
+| 8 | **G3S** | `GET /g3s/model-consumption/consumption` | Platform cost tracking |
 
 ---
 
@@ -80,7 +77,7 @@ Provides full observability:
 - **Traces**: Every Lambda execution creates a trace with a unique `trace_id`
 - **LLM Calls**: Tokens, cost, latency, model details are logged
 - **Events**: Each step (input scan, Bedrock call, output scan) is logged as a separate event
-- **Validation**: Prompt quality is evaluated using metrics like Toxicity Evaluator
+- **Output**: Final LLM response is attached to the trace
 
 ### G3S — GenAI Gateway Service
 Provides model configuration management and cost tracking. The POC queries the consumption endpoint to show platform-wide usage data.
@@ -95,7 +92,7 @@ Provides model configuration management and cost tracking. The POC queries the c
 | `01-prerequisites.md` | Curl commands to set up prompts and security groups |
 | `02-deployment-guide.md` | How to deploy via AWS Lambda Console |
 | `03-testing-guide.md` | 6 test scenarios (positive + negative) with JSON payloads |
-| `lambda_function.py` | The Lambda code — single file, ~450 lines, no layers |
+| `lambda_function.py` | The Lambda code — single file, ~420 lines, no layers |
 
 ---
 
@@ -160,7 +157,6 @@ All steps use `curl` commands documented in `01-prerequisites.md`.
       },
       "g3s_platform_consumption": [ ... ]
     },
-    "prompt_validation": { ... },
     "response": "Thank you for contacting TechCorp..."
   }
 }
@@ -172,7 +168,7 @@ All steps use `curl` commands documented in `01-prerequisites.md`.
 
 | # | Scenario | Type | What's Tested |
 |---|----------|------|---------------|
-| 1 | Safe question | Positive | Full happy path — all 11 steps |
+| 1 | Safe question | Positive | Full happy path — all 10 steps |
 | 2 | PII in variables | Negative | Input PII detection & redaction |
 | 3 | Toxic input | Negative | Toxicity blocking (Bedrock skipped) |
 | 4 | Prompt injection | Negative | Injection detection (Bedrock skipped) |
