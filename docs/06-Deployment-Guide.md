@@ -175,3 +175,39 @@ aws lambda update-function-code \
   --function-name aiforce-pes \
   --zip-file fileb://pes_lambda.zip
 ```
+
+---
+
+## Step 5: Deploying the Full POC Orchestrator as a Single Lambda (Console)
+
+If you want to run the entire Test Orchestrator inside a single AWS Lambda function via the AWS Console, follow these steps:
+
+1. **Create the Function:**
+   * Go to AWS Lambda Console.
+   * Click **Create function**.
+   * **Function name:** `aiforce-poc-orchestrator`
+   * **Runtime:** Python 3.9+
+   * **Execution role:** Use the `aiforce-lambda-role` we created in Step 1 (Ensure it has Bedrock permissions).
+2. **Upload the Code Structure:**
+   In the Lambda Code source editor, you must replicate this exact file structure:
+   * Delete the default `lambda_function.py`.
+   * Create `orchestrator.py` and paste the contents of `poc/orchestrator.py`.
+   * Create `config.py` and paste the contents of `poc/config.py`.
+   * Create `bedrock_client.py` and paste the contents of `poc/bedrock_client.py`.
+   * Create a new folder named `shared`.
+   * Inside `shared`, create `__init__.py` and paste the contents of `lambdas/shared/__init__.py`.
+   * Inside `shared`, create `aiforce_client.py` and paste the contents of `lambdas/shared/aiforce_client.py`.
+3. **Add the `requests` Library Layer:**
+   Since AWS Lambda does not include the `requests` library by default:
+   * Scroll down to **Layers** -> **Add a layer**.
+   * Choose **AWS layers** or specify an ARN for the `requests` library in your specific region (e.g., `arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p310-requests:8`). Alternatively, you can upload a zip file containing the `requests` package.
+4. **Configure the Handler:**
+   * Under **Runtime settings**, click **Edit**.
+   * Change the **Handler** from `lambda_function.lambda_handler` to `orchestrator.lambda_handler`.
+5. **Set Environment Variables:**
+   * `AIFORCE_BASE_URL` = `https://54.91.159.104`
+   * `AIFORCE_AUTH_TOKEN` = `your-bearer-token`
+   * `AWS_REGION` = `us-east-1` (or your preferred Bedrock region)
+6. **Increase Timeout:**
+   * Under **Configuration** -> **General configuration**, increase the **Timeout** to at least **1 min 0 sec** (calling 4 APIs + Bedrock takes time).
+

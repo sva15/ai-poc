@@ -4,51 +4,37 @@ This guide covers how to test your AIForce POC components, from running the loca
 
 ---
 
-## 1. Testing the Full End-to-End Flow Locally
+## 1. Testing the Full End-to-End POC Flow (AWS Lambda Console)
 
-The `orchestrator.py` script is the best way to test the integration of all services together. It simulates a real-world flow from setup, configuration to prompt execution and cost tracking.
+The `orchestrator.py` has been adapted to run entirely within a single AWS Lambda function. This simulates a real-world flow from setup, configuration to prompt execution, and cost tracking.
 
 ### Prerequisites
-
-You need the `requests` and `boto3` libraries installed:
-
-```bash
-cd poc
-pip install -r requirements.txt
-```
-
-### Setting Environment Variables
-
-Set the credentials before running:
-
-**Linux / Mac:**
-```bash
-export AIFORCE_AUTH_TOKEN="your-aiforce-bearer-token"
-export AWS_REGION="us-east-1"
-# Optional Overrides:
-# export BEDROCK_MODEL_ID="anthropic.claude-3-sonnet-20240229-v1:0"
-# export SECURITY_GROUP_NAME="my-test-group"
-```
-
-**Windows PowerShell:**
-```powershell
-$env:AIFORCE_AUTH_TOKEN="your-aiforce-bearer-token"
-$env:AWS_REGION="us-east-1"
-```
+You must have deployed the `aiforce-poc-orchestrator` Lambda function as described in **Step 5** of the [Deployment Guide](06-Deployment-Guide.md), including setting the environment variables (`AIFORCE_AUTH_TOKEN`, `AWS_REGION`, etc.) and attaching a `requests` Lambda layer.
 
 ### Running the Orchestrator
 
-```bash
-python orchestrator.py
+1. Open the [AWS Lambda Console](https://console.aws.amazon.com/lambda).
+2. Navigate to your `aiforce-poc-orchestrator` function.
+3. Select the **Test** tab.
+4. Create a new test event with the following JSON payload (you can customize the question and company):
+
+```json
+{
+  "question": "How do I reset my account password?",
+  "company": "TechCorp Solutions"
+}
 ```
 
-**Expected Output Breakdown:**
-* **Phase 1 (Setup):** Health checks pass (✅), LLM configs listed, Prompt saved, SGS config complete.
-* **Phase 2 (Execute):** Should process 3 queries. Shows Direct Bedrock interaction. Input & Output tokens consumed should be visible. 
-* **Phase 3 (Evaluate):** Checks metric listing and dataset uploads.
-* **Phase 4 (Cost Report):** Cost of the 3 executed queries + historical G3S data.
+5. Click **Save** and then **Test**.
 
-*If any step fails, you'll see a `⚠️` or `❌` indicating which service or payload failed.*
+### Expected Execution Log Output
+The Lambda response will contain a `logs` string that captures the complete stdout flow. It will look like this:
+
+* **Phase 1 (Setup):** Health checks pass (✅), LLM configs listed, Prompt saved, SGS config complete.
+* **Phase 2 (Execute):** Shows Direct Bedrock interaction for the specific question you asked in the Test Event. Input & Output tokens consumed should be visible along with Security scan checkpoints.
+* **Phase 4 (Cost Report):** Cost of the executed query + historical G3S platform-wide data + recent GCS trace summaries.
+
+*If any step fails, you'll see a `⚠️` or `❌` in the logs indicating which service or payload failed.*
 
 ---
 

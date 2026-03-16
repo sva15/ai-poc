@@ -35,8 +35,13 @@ from config import (
 from bedrock_client import BedrockClient
 
 # Import AIForce service clients
-sys.path.insert(0, "../lambdas")
-from shared.aiforce_client import PESClient, G3SClient, SGSClient, GCSClient
+try:
+    # Try importing directly (when deployed as Lambda with shared folder in root)
+    from shared.aiforce_client import PESClient, G3SClient, SGSClient, GCSClient
+except ModuleNotFoundError:
+    # Fallback for local execution
+    sys.path.insert(0, "../lambdas")
+    from shared.aiforce_client import PESClient, G3SClient, SGSClient, GCSClient
 
 # ── Logging ──────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -699,6 +704,71 @@ def main():
 
     print("\n\n🎉 POC COMPLETE! Review the output above for the full flow.")
 
+
+def lambda_handler(event, context):
+    """
+    AWS Lambda entry point for the POC Orchestrator.
+    You can trigger this from the AWS Lambda Console Test tab.
+    
+    Expected event payload (optional):
+    {
+        "question": "How do I reset my password?",
+        "company": "TechCorp"
+    }
+    """
+    import sys
+    from io import StringIO
+
+    # Capture standard output to return in the API response (optional, but helpful for console testing)
+    old_stdout = sys.stdout
+    sys.stdout = mystdout = StringIO()
+
+    try:
+        poc = AIForcePOC()
+        
+        # ── Phase 1: Setup ───────────────────────────────────────────────
+        poc.setup()
+        
+        # ── Phase 2: Execute ─────────────────────────────────────────────
+        user_question = event.get("question", "How do I reset my password?")
+        company_name = event.get("company", "TechCorp")
+        
+        print(f"\n\n{'━' * 70}")
+        print(f"  EXECUTING Lambda Event Query")
+        print(f"  Question: {user_question}")
+        print(f"{'━' * 70}")
+        
+        execution_result = poc.execute(
+            user_question=user_question,
+            company_name=company_name,
+        )
+        
+        # ── Phase 4: Cost Report (skipping evaluation to save time in Lambda) ───
+        poc.cost_report()
+        
+        # Restore stdout
+        sys.stdout = old_stdout
+        
+        return {
+            "statusCode": 200,
+            "body": json.dumps({
+                "message": "POC executed successfully",
+                "execution_result": execution_result,
+                "logs": mystdout.getvalue()
+            }, default=str)
+        }
+        
+    except Exception as e:
+        # Restore stdout on error
+        sys.stdout = old_stdout
+        logger.error(f"Error in POC orchestrator: {e}")
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "error": str(e),
+                "logs": mystdout.getvalue()
+            })
+        }
 
 if __name__ == "__main__":
     main()
