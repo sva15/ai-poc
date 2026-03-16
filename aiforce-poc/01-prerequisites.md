@@ -121,15 +121,17 @@ curl -k -X POST "https://54.91.159.104/sgs/security-groups/register" \
 
 ## Step 7: Configure Scanners on the Security Group
 
+> **Important**: Every scanner must include a `description` field and all scanners must be listed (set unused ones to `enabled: false`).
+
 ```bash
 curl -k -X PUT "https://54.91.159.104/sgs/security-groups/poc-security-group/config" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "state": "active",
     "config_data": {
       "input_safety_guards": {
         "Detect PII": {
+          "description": "Redacts personally identifiable information from the input prompt.",
           "enabled": true,
           "config": {
             "entity_types": ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "US_SSN"],
@@ -138,16 +140,59 @@ curl -k -X PUT "https://54.91.159.104/sgs/security-groups/poc-security-group/con
           }
         },
         "Detect Prompt Injection": {
+          "description": "Analyzes the prompt for patterns indicative of attempts to override LLM instructions.",
           "enabled": true,
           "config": { "threshold": 0.7 }
         },
         "Detect Toxicity": {
+          "description": "Detects offensive or harmful language in the input prompt.",
           "enabled": true,
           "config": { "threshold": 0.8 }
+        },
+        "Detect Banned Substrings": {
+          "description": "Ban Substrings scanner.",
+          "enabled": false,
+          "config": { "substrings": [], "redact": false, "case_sensitive": false, "contains_all": false }
+        },
+        "Detect Banned Topics": {
+          "description": "Restrict specific topics.",
+          "enabled": false,
+          "config": { "topics": [], "threshold": 0.85 }
+        },
+        "Detect Bias": {
+          "description": "Bias scanner.",
+          "enabled": false,
+          "config": { "threshold": 0.8 }
+        },
+        "Detect Code Language": {
+          "description": "Detects code snippets.",
+          "enabled": false,
+          "config": { "is_blocked": false, "languages": [], "threshold": 0.85 }
+        },
+        "Detect Competitors": {
+          "description": "Competitor detection.",
+          "enabled": false,
+          "config": { "competitors": [], "redact": false, "threshold": 0.8 }
+        },
+        "Detect Secrets": {
+          "description": "Scans for API keys and secrets.",
+          "enabled": false,
+          "config": { "redact": false, "redact_mode": "all", "secrets": [] }
+        },
+        "Regex-based Sanitization": {
+          "description": "Regex sanitization.",
+          "enabled": false,
+          "config": { "is_blocked": false, "patterns": [], "redact": false }
+        },
+        "Token Limit Enforcement": {
+          "description": "Token count limit.",
+          "enabled": false,
+          "config": { "limit": 4096 }
         }
       },
       "output_safety_guards": {
         "Detect PII": {
+          "description": "Redacts PII from LLM output.",
           "enabled": true,
           "config": {
             "entity_types": ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER"],
@@ -156,8 +201,54 @@ curl -k -X PUT "https://54.91.159.104/sgs/security-groups/poc-security-group/con
           }
         },
         "Detect Toxicity": {
+          "description": "Detects toxic language in output.",
           "enabled": true,
           "config": { "threshold": 0.8 }
+        },
+        "Detect Banned Substrings": {
+          "description": "Ban Substrings scanner.",
+          "enabled": false,
+          "config": { "substrings": [], "redact": false, "case_sensitive": false }
+        },
+        "Detect Banned Topics": {
+          "description": "Restrict specific topics.",
+          "enabled": false,
+          "config": { "topics": [], "threshold": 0.85 }
+        },
+        "Detect Bias": {
+          "description": "Bias scanner.",
+          "enabled": false,
+          "config": { "threshold": 0.8 }
+        },
+        "Detect Code Language": {
+          "description": "Detects code snippets.",
+          "enabled": false,
+          "config": { "is_blocked": false, "languages": [], "threshold": 0.85 }
+        },
+        "Detect Competitors": {
+          "description": "Competitor detection.",
+          "enabled": false,
+          "config": { "competitors": [], "redact": false, "threshold": 0.8 }
+        },
+        "Detect Malicious URLs": {
+          "description": "Detect malicious URLs.",
+          "enabled": false,
+          "config": { "threshold": 0.8 }
+        },
+        "Detect Relevance": {
+          "description": "Relevance scanner.",
+          "enabled": false,
+          "config": { "threshold": 0.3 }
+        },
+        "Detect Sensitive Data": {
+          "description": "Sensitive data detection.",
+          "enabled": false,
+          "config": { "entity_types": [], "redact": false, "threshold": 0.8 }
+        },
+        "Regex-based Sanitization": {
+          "description": "Regex sanitization.",
+          "enabled": false,
+          "config": { "is_blocked": false, "patterns": [], "redact": false }
         }
       }
     }
