@@ -3,63 +3,26 @@
 ## Architecture
 
 ```
-AIForce MCS                  ALB                     Lambda
+AIForce MCS                Kong (ALB)                Lambda
      |                        |                        |
-     |-- POST /mcp/ -------> | /dev/aiforce-mcp-tool  |
-     |                        |-- forward -----------> |
-     |                        |                        | FastMCP handles MCP protocol
+     |-- MCP JSON-RPC -----> | /dev/aiforce-mcp-tool  |
+     |   (initialize,        |                        |
+     |    tools/list,         |-- Kong Lambda Plugin -> |
+     |    tools/call)         |   (payload_version=1,  |
+     |                        |    proxy_integration)   | Handles MCP protocol
      |                        |                        | Returns tool results
-     |                        |<- response ----------- |
+     |                        |<- API GW v1 response - |
      |<- MCP response ------- |                        |
 ```
 
----
-
-## Step 1: Build the Deployment Package (ZIP)
-
-Since FastMCP and mangum are external libraries, we need a ZIP package (not console paste).
-
-### On your local machine (requires Python 3.12):
-
-```bash
-# Create a build directory
-mkdir mcp-lambda-build
-cd mcp-lambda-build
-
-# Install dependencies into a package directory
-pip install fastmcp mangum -t ./package
-
-# Copy the Lambda code
-cp ../agent-poc/lambda_function.py ./package/
-
-# Create the ZIP
-cd package
-zip -r ../mcp-lambda.zip .
-cd ..
-```
-
-### On Windows (PowerShell):
-
-```powershell
-# Create build directory
-New-Item -ItemType Directory -Path mcp-lambda-build -Force
-Set-Location mcp-lambda-build
-
-# Install dependencies
-pip install fastmcp mangum -t .\package
-
-# Copy Lambda code
-Copy-Item ..\agent-poc\lambda_function.py .\package\
-
-# Create ZIP
-Compress-Archive -Path .\package\* -DestinationPath .\mcp-lambda.zip -Force
-```
-
-This creates `mcp-lambda.zip` (~10-30 MB depending on dependencies).
+**Kong Lambda Plugin Config**:
+- `aws_gateway_compatible` = enabled
+- `payload_version` = 1 (API Gateway REST v1 format)
+- `proxy_integration` = enabled
 
 ---
 
-## Step 2: Create Lambda Function
+## Step 1: Create Lambda Function
 
 1. Go to **AWS Lambda Console** → **Create function**
 2. **Function name**: `aiforce-mcp-tools`
@@ -69,64 +32,152 @@ This creates `mcp-lambda.zip` (~10-30 MB depending on dependencies).
 
 ---
 
-## Step 3: Upload ZIP
+## Step 2: Paste the Code
 
-1. In the Lambda function page, go to **Code** tab
-2. Click **Upload from** → **.zip file**
-3. Upload the `mcp-lambda.zip` file
-4. Click **Save**
+1. Open `lambda_function.py` from the `agent-poc/` directory
+2. **Paste it directly** into the Lambda Console inline editor
+3. Click **Deploy**
+
+> **No ZIP needed.** This version uses only native Python (`json`, `datetime`). No external dependencies.
 
 ---
 
-## Step 4: Configure Lambda
+## Step 3: Configure Lambda
 
 ### Handler
-Set handler to: `lambda_function.lambda_handler`
+Verify handler is set to: `lambda_function.lambda_handler`
 
 ### Timeout
-Set to **60 seconds** (Configuration → General configuration → Edit)
+Set to **30 seconds** (Configuration → General configuration → Edit)
 
 ### Memory
-Set to **256 MB** minimum (FastMCP + mangum need more memory than the previous POC)
-
-### No environment variables needed
-The MCP tool server is self-contained — no external API calls.
+**128 MB** is sufficient (no external libraries)
 
 ---
 
-## Step 5: Configure ALB Target Group
+## Step 4: Kong Gateway Configuration
 
-1. Create a **Target Group** pointing to the Lambda function
-2. Configure ALB listener rule:
-   - **Path pattern**: `/dev/aiforce-mcp-tool/*`
-   - **Forward to**: The Lambda target group
+Your existing Kong setup:
+- **ALB route** → Kong
+- **Kong Service** → with route `/dev/aiforce-mcp-tool`
+- **Kong Lambda Plugin** on this service:
+  - `aws_gateway_compatible` = true
+  - `payload_version` = 1
+  - `proxy_integration` = true
 
-The final MCP endpoint URL will be:
+Make sure the Kong route's `strip_path` setting matches what the Lambda expects.
+
+---
+
+## Step 5: Verify with curl
+
+### Test 1: Health Check (GET)
+```bash
+curl "http://YOUR_ALB_URL/kong-api/dev/aiforce-mcp-tool"
 ```
-http://<alb-url>/kong-api/dev/aiforce-mcp-tool/mcp/
+
+Expected:
+```json
+{
+  "status": "ok",
+  "server": "aiforce-poc-tools",
+  "version": "1.0.0",
+  "tools": ["get_weather", "calculate", "get_company_info"],
+  "mcp_protocol": "2024-11-05"
+}
+```
+
+### Test 2: MCP Initialize (POST)
+```bash
+curl -X POST "http://YOUR_ALB_URL/kong-api/dev/aiforce-mcp-tool" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "initialize",
+    "id": 1,
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {},
+      "clientInfo": {"name": "test", "version": "1.0"}
+    }
+  }'
+```
+
+### Test 3: List Tools (POST)
+```bash
+curl -X POST "http://YOUR_ALB_URL/kong-api/dev/aiforce-mcp-tool" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "tools/list",
+    "id": 2,
+    "params": {}
+  }'
+```
+
+### Test 4: Call a Tool Directly (POST)
+```bash
+curl -X POST "http://YOUR_ALB_URL/kong-api/dev/aiforce-mcp-tool" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "tools/call",
+    "id": 3,
+    "params": {
+      "name": "get_weather",
+      "arguments": {"city": "Tokyo"}
+    }
+  }'
+```
+
+Expected:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"city\": \"Tokyo\", \"temperature_celsius\": 28, ...}"
+      }
+    ]
+  }
+}
 ```
 
 ---
 
-## Step 6: Verify
+## Troubleshooting
 
-Test the Lambda directly from the console with an ALB-style event:
+### "Empty reply from server"
+- Check Lambda **CloudWatch Logs** for errors
+- Verify Kong route `strip_path` setting
+- Test Lambda directly from Console with this test event:
 
 ```json
 {
-  "requestContext": {
-    "elb": {
-      "targetGroupArn": "arn:aws:elasticloadbalancing:region:123456789:targetgroup/my-tg/abc123"
-    }
-  },
   "httpMethod": "POST",
-  "path": "/dev/aiforce-mcp-tool/mcp/",
+  "path": "/dev/aiforce-mcp-tool",
   "headers": {
     "content-type": "application/json"
   },
-  "body": "{\"jsonrpc\": \"2.0\", \"method\": \"initialize\", \"id\": 1, \"params\": {\"protocolVersion\": \"2024-11-05\", \"capabilities\": {}, \"clientInfo\": {\"name\": \"test\", \"version\": \"1.0\"}}}",
+  "body": "{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"id\":1,\"params\":{}}",
   "isBase64Encoded": false
 }
 ```
 
-Expected: HTTP 200 with MCP initialization response containing server info and tool capabilities.
+### Kong path issues
+If Kong strips the path before forwarding, the Lambda receives `path: "/"` instead of `path: "/dev/aiforce-mcp-tool"`. This is fine — the Lambda handles all paths the same way.
+
+### Response format
+Lambda returns proper API Gateway v1 proxy integration format:
+```json
+{
+  "statusCode": 200,
+  "headers": {"Content-Type": "application/json", ...},
+  "body": "...",
+  "isBase64Encoded": false
+}
+```
+This is what Kong's proxy_integration expects.
