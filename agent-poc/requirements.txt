@@ -1,0 +1,4 @@
+fastmcp
+mangum
+mcp[cli]
+requests

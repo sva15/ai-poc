@@ -1,81 +1,37 @@
 """
-AIForce Agent POC — MCP Tool Server (Lambda + Kong + ALB)
+AIForce Agent POC — MCP Tool Server (FastMCP + Lambda + Kong)
 
-MCP server that handles JSON-RPC protocol directly.
-Works with Kong Lambda plugin (aws_gateway_compatible, payload_version=1, proxy_integration).
+Real FastMCP server using @mcp.tool() decorators.
+Deployed on AWS Lambda behind Kong API Gateway.
+Compatible with Kong Lambda plugin (aws_gateway_compatible, payload_version=1, proxy_integration).
 
 Route: /dev/aiforce-mcp-tool
-No external dependencies — pure native Python.
+MCP endpoint: /dev/aiforce-mcp-tool/mcp (handled by FastMCP streamable HTTP)
 
-Tools:
-  - get_weather(city)          : Returns weather data for a city
-  - calculate(expression)      : Evaluates a math expression
-  - get_company_info(company)  : Returns company profile data
+Dependencies: fastmcp, mangum, mcp[cli], requests
 """
 
+from fastmcp import FastMCP
+from mangum import Mangum
 import json
 from datetime import datetime, timezone
 
+# ─── Create FastMCP Server ──────────────────────────────────────────
+# stateless_http=True is essential for Lambda (no persistent sessions)
 
-# ─── MCP Protocol Constants ─────────────────────────────────────────
-
-MCP_PROTOCOL_VERSION = "2024-11-05"
-SERVER_NAME = "aiforce-poc-tools"
-SERVER_VERSION = "1.0.0"
-
-
-# ─── Tool Definitions (MCP Schema) ──────────────────────────────────
-
-TOOLS = [
-    {
-        "name": "get_weather",
-        "description": "Get current weather for a city. Returns temperature in Celsius, weather condition, humidity, and wind speed.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "city": {
-                    "type": "string",
-                    "description": "Name of the city to get weather for. Supported: New York, London, Tokyo, Mumbai, Sydney, Paris, Dubai, Singapore."
-                }
-            },
-            "required": ["city"]
-        }
-    },
-    {
-        "name": "calculate",
-        "description": "Evaluate a mathematical expression safely. Supports +, -, *, /, ** (power), and parentheses. Example: '(10 + 5) * 2'",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "expression": {
-                    "type": "string",
-                    "description": "The mathematical expression to evaluate."
-                }
-            },
-            "required": ["expression"]
-        }
-    },
-    {
-        "name": "get_company_info",
-        "description": "Get company information including sector, headquarters, employee count, and a brief description. Available: TechCorp, HealthPlus, GreenEnergy, FinanceHub.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "company_name": {
-                    "type": "string",
-                    "description": "Name of the company to look up."
-                }
-            },
-            "required": ["company_name"]
-        }
-    }
-]
+mcp = FastMCP(
+    "aiforce-poc-tools",
+    stateless_http=True,
+)
 
 
-# ─── Tool Implementations ───────────────────────────────────────────
+# ─── Tool 1: Weather ────────────────────────────────────────────────
 
-def tool_get_weather(city):
-    """Get weather for a city."""
+@mcp.tool()
+def get_weather(city: str) -> str:
+    """Get current weather for a city. Returns temperature in Celsius, weather condition, humidity, and wind speed.
+    Supported cities: New York, London, Tokyo, Mumbai, Sydney, Paris, Dubai, Singapore.
+    """
     weather_data = {
         "New York": {"temp": 22, "condition": "Partly Cloudy", "humidity": 65, "wind_kmh": 18},
         "London": {"temp": 15, "condition": "Rainy", "humidity": 80, "wind_kmh": 25},
@@ -97,8 +53,13 @@ def tool_get_weather(city):
     })
 
 
-def tool_calculate(expression):
-    """Evaluate a math expression."""
+# ─── Tool 2: Calculator ─────────────────────────────────────────────
+
+@mcp.tool()
+def calculate(expression: str) -> str:
+    """Evaluate a mathematical expression safely. Supports +, -, *, /, ** (power), and parentheses.
+    Example: '(10 + 5) * 2' returns 30.
+    """
     try:
         allowed = set("0123456789+-*/.() ")
         if not all(c in allowed for c in expression):
@@ -109,8 +70,13 @@ def tool_calculate(expression):
         return json.dumps({"error": str(e), "expression": expression})
 
 
-def tool_get_company_info(company_name):
-    """Get company information."""
+# ─── Tool 3: Company Info ───────────────────────────────────────────
+
+@mcp.tool()
+def get_company_info(company_name: str) -> str:
+    """Get company information including sector, headquarters, employee count, revenue, and a brief description.
+    Available companies: TechCorp, HealthPlus, GreenEnergy, FinanceHub.
+    """
     companies = {
         "TechCorp": {
             "name": "TechCorp", "sector": "Technology",
@@ -145,191 +111,24 @@ def tool_get_company_info(company_name):
     return json.dumps(info)
 
 
-# Tool dispatch map
-TOOL_HANDLERS = {
-    "get_weather": lambda args: tool_get_weather(args.get("city", "Unknown")),
-    "calculate": lambda args: tool_calculate(args.get("expression", "0")),
-    "get_company_info": lambda args: tool_get_company_info(args.get("company_name", "Unknown")),
-}
+# ─── ASGI App + Lambda Handler ──────────────────────────────────────
 
+# FastMCP creates a Starlette ASGI app with MCP endpoint at /mcp/
+app = mcp.streamable_http_app()
 
-# ─── MCP Protocol Handlers ──────────────────────────────────────────
-
-def handle_initialize(request_id, params):
-    """Handle MCP initialize handshake."""
-    return {
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "result": {
-            "protocolVersion": MCP_PROTOCOL_VERSION,
-            "capabilities": {
-                "tools": {"listChanged": False}
-            },
-            "serverInfo": {
-                "name": SERVER_NAME,
-                "version": SERVER_VERSION
-            }
-        }
-    }
-
-
-def handle_tools_list(request_id, params):
-    """Handle tools/list — return all available tools."""
-    return {
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "result": {
-            "tools": TOOLS
-        }
-    }
-
-
-def handle_tools_call(request_id, params):
-    """Handle tools/call — execute a specific tool."""
-    tool_name = params.get("name", "")
-    arguments = params.get("arguments", {})
-
-    handler = TOOL_HANDLERS.get(tool_name)
-    if not handler:
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "error": {
-                "code": -32601,
-                "message": f"Tool not found: {tool_name}"
-            }
-        }
-
-    try:
-        result_text = handler(arguments)
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "result": {
-                "content": [
-                    {"type": "text", "text": result_text}
-                ]
-            }
-        }
-    except Exception as e:
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "error": {
-                "code": -32000,
-                "message": f"Tool execution error: {str(e)}"
-            }
-        }
-
-
-def handle_ping(request_id, params):
-    """Handle ping."""
-    return {
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "result": {}
-    }
-
-
-# Method dispatch map
-METHOD_HANDLERS = {
-    "initialize": handle_initialize,
-    "tools/list": handle_tools_list,
-    "tools/call": handle_tools_call,
-    "ping": handle_ping,
-}
-
-# Notification methods (no response expected)
-NOTIFICATION_METHODS = {"notifications/initialized", "initialized"}
-
-
-# ─── Lambda Handler ─────────────────────────────────────────────────
-
-def lambda_handler(event, context):
-    """
-    AWS Lambda handler for MCP server.
-    Works with Kong Lambda plugin (aws_gateway_compatible, payload_version=1, proxy_integration).
-
-    Kong sends API Gateway v1 format:
-    {
-        "httpMethod": "POST",
-        "path": "/dev/aiforce-mcp-tool",
-        "headers": {...},
-        "body": "{\"jsonrpc\": \"2.0\", ...}",
-        ...
-    }
-    """
-    print(f"[MCP] Event received: httpMethod={event.get('httpMethod')}, path={event.get('path')}")
-
-    http_method = event.get("httpMethod", "GET")
-    path = event.get("path", "/")
-
-    # Health check / GET requests
-    if http_method == "GET":
-        return api_response(200, {
-            "status": "ok",
-            "server": SERVER_NAME,
-            "version": SERVER_VERSION,
-            "tools": [t["name"] for t in TOOLS],
-            "mcp_protocol": MCP_PROTOCOL_VERSION,
-        })
-
-    # Only POST is valid for MCP
-    if http_method != "POST":
-        return api_response(405, {"error": "Method not allowed. Use POST for MCP requests."})
-
-    # Parse body
-    body = event.get("body", "")
-    if event.get("isBase64Encoded"):
-        import base64
-        body = base64.b64decode(body).decode("utf-8")
-
-    if not body:
-        return api_response(400, {"error": "Empty request body"})
-
-    try:
-        request = json.loads(body)
-    except json.JSONDecodeError as e:
-        print(f"[MCP] JSON parse error: {e}")
-        return api_response(400, {"jsonrpc": "2.0", "error": {"code": -32700, "message": f"Parse error: {str(e)}"}})
-
-    print(f"[MCP] Method: {request.get('method')}, ID: {request.get('id')}")
-
-    # Handle JSON-RPC request
-    method = request.get("method", "")
-    request_id = request.get("id")
-    params = request.get("params", {})
-
-    # Notifications (no response expected, but we return 202 for Kong)
-    if method in NOTIFICATION_METHODS:
-        print(f"[MCP] Notification: {method}")
-        return api_response(200, {"jsonrpc": "2.0", "id": request_id, "result": {}})
-
-    # Dispatch to handler
-    handler = METHOD_HANDLERS.get(method)
-    if not handler:
-        print(f"[MCP] Unknown method: {method}")
-        return api_response(200, {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "error": {"code": -32601, "message": f"Method not found: {method}"}
-        })
-
-    result = handler(request_id, params)
-    print(f"[MCP] Response for {method}: success")
-    return api_response(200, result)
-
-
-def api_response(status_code, body):
-    """Build API Gateway v1 proxy integration response for Kong."""
-    return {
-        "statusCode": status_code,
-        "headers": {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
-        "body": json.dumps(body),
-        "isBase64Encoded": False
-    }
+# Mangum wraps the ASGI app for AWS Lambda
+# - lifespan="off"  : Skip ASGI lifespan events (not needed on Lambda)
+# - api_gateway_base_path : Strips this prefix from the path before passing to FastMCP
+#
+# Kong sends path "/dev/aiforce-mcp-tool/mcp" → Mangum strips prefix → FastMCP sees "/mcp"
+#
+# If your Kong route has strip_path=true:
+#   Kong sends path "/mcp" → set api_gateway_base_path="" (empty)
+# If your Kong route has strip_path=false:
+#   Kong sends path "/dev/aiforce-mcp-tool/mcp" → set api_gateway_base_path="/dev/aiforce-mcp-tool"
+#
+lambda_handler = Mangum(
+    app,
+    lifespan="off",
+    api_gateway_base_path="/dev/aiforce-mcp-tool",
+)
