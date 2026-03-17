@@ -19,10 +19,7 @@ from datetime import datetime, timezone
 # ─── Create FastMCP Server ──────────────────────────────────────────
 # stateless_http=True is essential for Lambda (no persistent sessions)
 
-mcp = FastMCP(
-    "aiforce-poc-tools",
-    stateless_http=True,
-)
+mcp = FastMCP("aiforce-poc-tools")
 
 
 # ─── Tool 1: Weather ────────────────────────────────────────────────
@@ -114,7 +111,8 @@ def get_company_info(company_name: str) -> str:
 # ─── ASGI App + Lambda Handler ──────────────────────────────────────
 
 # FastMCP creates a Starlette ASGI app with MCP endpoint at /mcp/
-app = mcp.streamable_http_app()
+# stateless_http=True is essential for Lambda (no persistent sessions)
+app = mcp.http_app(stateless_http=True)
 
 # Mangum wraps the ASGI app for AWS Lambda
 # - lifespan="off"  : Skip ASGI lifespan events (not needed on Lambda)
