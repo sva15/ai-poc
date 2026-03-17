@@ -6,20 +6,23 @@ Deployed on AWS Lambda behind Kong API Gateway.
 Compatible with Kong Lambda plugin (aws_gateway_compatible, payload_version=1, proxy_integration).
 
 Route: /dev/aiforce-mcp-tool
-MCP endpoint: /dev/aiforce-mcp-tool/mcp (handled by FastMCP streamable HTTP)
 
-Dependencies: fastmcp, mangum, mcp[cli], requests
+Dependencies: fastmcp, mcp[cli], requests
+(No mangum needed — Kong event handling is built-in)
 """
 
 from fastmcp import FastMCP
-from mangum import Mangum
 import json
+import asyncio
+import base64
 from datetime import datetime, timezone
 
 # ─── Create FastMCP Server ──────────────────────────────────────────
-# stateless_http=True is essential for Lambda (no persistent sessions)
 
 mcp = FastMCP("aiforce-poc-tools")
+
+MCP_PROTOCOL_VERSION = "2024-11-05"
+SERVER_VERSION = "1.0.0"
 
 
 # ─── Tool 1: Weather ────────────────────────────────────────────────
@@ -108,25 +111,200 @@ def get_company_info(company_name: str) -> str:
     return json.dumps(info)
 
 
-# ─── ASGI App + Lambda Handler ──────────────────────────────────────
+# ─── Tool dispatch (maps tool name → direct function call) ──────────
 
-# FastMCP creates a Starlette ASGI app with MCP endpoint at /mcp/
-# stateless_http=True is essential for Lambda (no persistent sessions)
-app = mcp.http_app(stateless_http=True)
+TOOL_DISPATCH = {
+    "get_weather": lambda args: get_weather(args.get("city", "Unknown")),
+    "calculate": lambda args: calculate(args.get("expression", "0")),
+    "get_company_info": lambda args: get_company_info(args.get("company_name", "Unknown")),
+}
 
-# Mangum wraps the ASGI app for AWS Lambda
-# - lifespan="off"  : Skip ASGI lifespan events (not needed on Lambda)
-# - api_gateway_base_path : Strips this prefix from the path before passing to FastMCP
-#
-# Kong sends path "/dev/aiforce-mcp-tool/mcp" → Mangum strips prefix → FastMCP sees "/mcp"
-#
-# If your Kong route has strip_path=true:
-#   Kong sends path "/mcp" → set api_gateway_base_path="" (empty)
-# If your Kong route has strip_path=false:
-#   Kong sends path "/dev/aiforce-mcp-tool/mcp" → set api_gateway_base_path="/dev/aiforce-mcp-tool"
-#
-lambda_handler = Mangum(
-    app,
-    lifespan="off",
-    api_gateway_base_path="/dev/aiforce-mcp-tool",
-)
+
+# ─── MCP Protocol Handling ──────────────────────────────────────────
+
+def _get_tool_schemas():
+    """Build MCP tool schemas. FastMCP registers tools via @mcp.tool(),
+    we extract schemas from function signatures for the tools/list response."""
+    return [
+        {
+            "name": "get_weather",
+            "description": get_weather.__doc__.strip(),
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "city": {"type": "string", "description": "Name of the city to get weather for."}
+                },
+                "required": ["city"]
+            }
+        },
+        {
+            "name": "calculate",
+            "description": calculate.__doc__.strip(),
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "expression": {"type": "string", "description": "The mathematical expression to evaluate."}
+                },
+                "required": ["expression"]
+            }
+        },
+        {
+            "name": "get_company_info",
+            "description": get_company_info.__doc__.strip(),
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "company_name": {"type": "string", "description": "Name of the company to look up."}
+                },
+                "required": ["company_name"]
+            }
+        },
+    ]
+
+
+def handle_mcp_request(body):
+    """Process a single MCP JSON-RPC request and return the response."""
+    method = body.get("method", "")
+    request_id = body.get("id")
+    params = body.get("params", {})
+
+    print(f"[MCP] method={method}, id={request_id}")
+
+    # initialize — MCP handshake
+    if method == "initialize":
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "result": {
+                "protocolVersion": MCP_PROTOCOL_VERSION,
+                "capabilities": {"tools": {"listChanged": False}},
+                "serverInfo": {"name": "aiforce-poc-tools", "version": SERVER_VERSION}
+            }
+        }
+
+    # notifications — acknowledge silently
+    if method in ("notifications/initialized", "initialized"):
+        return {"jsonrpc": "2.0", "id": request_id, "result": {}}
+
+    # tools/list — return all registered tools
+    if method == "tools/list":
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "result": {"tools": _get_tool_schemas()}
+        }
+
+    # tools/call — execute a tool
+    if method == "tools/call":
+        tool_name = params.get("name", "")
+        arguments = params.get("arguments", {})
+
+        handler = TOOL_DISPATCH.get(tool_name)
+        if not handler:
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {"code": -32601, "message": f"Tool not found: {tool_name}"}
+            }
+
+        try:
+            result_text = handler(arguments)
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "result": {
+                    "content": [{"type": "text", "text": result_text}]
+                }
+            }
+        except Exception as e:
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {"code": -32000, "message": f"Tool error: {str(e)}"}
+            }
+
+    # ping
+    if method == "ping":
+        return {"jsonrpc": "2.0", "id": request_id, "result": {}}
+
+    # Unknown method
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "error": {"code": -32601, "message": f"Method not found: {method}"}
+    }
+
+
+# ─── Lambda Handler (Kong API Gateway v1 compatible) ────────────────
+
+def lambda_handler(event, context):
+    """
+    AWS Lambda handler — works with Kong Lambda plugin:
+      aws_gateway_compatible = true
+      payload_version = 1
+      proxy_integration = true
+
+    Kong sends API Gateway v1 events with:
+      httpMethod, path, headers, body, isBase64Encoded
+    Lambda must return:
+      statusCode, headers, body, isBase64Encoded
+    """
+    print(f"[MCP] Event: httpMethod={event.get('httpMethod')}, path={event.get('path')}")
+
+    http_method = event.get("httpMethod", "GET")
+
+    # Handle GET — simple health/info check
+    if http_method == "GET":
+        return api_response(200, {
+            "status": "ok",
+            "server": "aiforce-poc-tools",
+            "version": SERVER_VERSION,
+            "tools": ["get_weather", "calculate", "get_company_info"],
+            "mcp_protocol": MCP_PROTOCOL_VERSION,
+        })
+
+    # Handle OPTIONS — CORS preflight
+    if http_method == "OPTIONS":
+        return api_response(200, {})
+
+    # Only POST for MCP
+    if http_method != "POST":
+        return api_response(405, {"error": "Method not allowed. Use POST for MCP requests."})
+
+    # Parse body
+    body_str = event.get("body", "")
+    if event.get("isBase64Encoded") and body_str:
+        body_str = base64.b64decode(body_str).decode("utf-8")
+
+    if not body_str:
+        return api_response(400, {
+            "jsonrpc": "2.0",
+            "error": {"code": -32700, "message": "Empty request body"}
+        })
+
+    try:
+        body = json.loads(body_str)
+    except json.JSONDecodeError as e:
+        return api_response(400, {
+            "jsonrpc": "2.0",
+            "error": {"code": -32700, "message": f"Parse error: {str(e)}"}
+        })
+
+    # Handle MCP JSON-RPC request
+    result = handle_mcp_request(body)
+    return api_response(200, result)
+
+
+def api_response(status_code, body):
+    """Build API Gateway v1 proxy integration response (Kong compatible)."""
+    return {
+        "statusCode": status_code,
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
+        "body": json.dumps(body),
+        "isBase64Encoded": False
+    }
