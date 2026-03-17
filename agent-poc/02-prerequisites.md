@@ -75,14 +75,32 @@ Expected: List of 3 tools (get_weather, calculate, get_company_info).
 ## Step 3: Register MCP Server in AIForce MCS
 
 ```bash
+curl -k -X POST "AIFORCE_URL/mcs/mcp_studio/test-connection" \
+  -H "Authorization: Bearer YOUR_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "poc-mcp-tools",
+    "server_type": 2,
+    "config_type": 2,
+    "server_id": "poc-mcp-tools",
+    "server_url": "YOUR_ALB_URL/dev/aiforce-mcp-tool",
+    "auth_type": 1
+  }'
+```
+
+If the connection is successful, register the server:
+
+```bash
 curl -k -X POST "AIFORCE_URL/mcs/mcp_studio/servers" \
   -H "Authorization: Bearer YOUR_AUTH_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "poc-mcp-tools",
-    "transport": 2,
     "description": "POC external MCP server with weather, calculator, and company info tools",
-    "server_url": "YOUR_ALB_URL/dev/aiforce-mcp-tool/mcp/",
+    "server_type": 2,
+    "config_type": 2,
+    "server_id": "poc-mcp-tools",
+    "server_url": "YOUR_ALB_URL/dev/aiforce-mcp-tool",
     "auth_type": 1,
     "is_active": true
   }'
