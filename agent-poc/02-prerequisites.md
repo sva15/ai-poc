@@ -102,6 +102,10 @@ curl -k -X POST "AIFORCE_URL/mcs/mcp_studio/servers" \
     "server_id": "poc-mcp-tools",
     "server_url": "YOUR_ALB_URL/dev/aiforce-mcp-tool",
     "auth_type": 1,
+    "auth_credentials": [],
+    "variables": [],
+    "command": null,
+    "arguments": null,
     "is_active": true
   }'
 ```
