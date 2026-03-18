@@ -23,8 +23,11 @@ curl -k -X POST "AIFORCE_URL/tcs/tools_library/publish_tool" \
     "name": "MathCalculator",
     "description": "Calculates basic mathematical expressions like (15 + 20) * 3",
     "tool_type": 1,
+    "auth_type": 0,
     "publish_status": true,
     "is_active": true,
+    "mcp_enabled": false,
+    "is_public": true,
     "connector_script": "def calculate(expression):\n    try:\n        return str(eval(expression))\n    except Exception as e:\n        return str(e)\n\nOUTPUT = calculate(INPUT.get(\"expression\", \"0\"))",
     "function_list": ["calculate"],
     "input_details": {
@@ -38,7 +41,19 @@ curl -k -X POST "AIFORCE_URL/tcs/tools_library/publish_tool" \
         "type": "string",
         "description": "The result of the calculation"
       }
-    }
+    },
+    "virtual_env_name": "",
+    "package_list": [],
+    "documentation_type": null,
+    "api_list": [],
+    "connector_methods": [],
+    "connector_actions": [],
+    "authorization_type": 0,
+    "authorization_config": [],
+    "connector_properties": [],
+    "json_schema": null,
+    "is_connector": false,
+    "vault_enabled": false
   }'
 ```
 
